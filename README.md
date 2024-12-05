@@ -55,8 +55,39 @@ cp /tmp/nats-0.1.5-linux-amd64/nats ~/bin/
 ```bash
 USER1_KEYCLOAK_SUB="f:d704f61d-fade-4641-b03a-1f211206c5b6:user1"
 USER2_KEYCLOAK_SUB="f:d704f61d-fade-4641-b03a-1f211206c5b6:user2"
-USER1_KEYCLOAK_USERINFO='{"sub":"f:d704f61d-fade-4641-b03a-1f211206c5b6:user1","email_verified":true,"preferred_username":"user1","email":"user1@example.com"}'
-USER2_KEYCLOAK_USERINFO='{"sub":"f:d704f61d-fade-4641-b03a-1f211206c5b6:user2","email_verified":false,"preferred_username":"user2","email":"user2@example.net"}'
+USER3_KEYCLOAK_SUB="f:d704f61d-fade-4641-b03a-1f211206c5b6:user3"
+
+USER1_KEYCLOAK_USERINFO=$(cat <<EOF
+{
+  "sub": "$USER1_KEYCLOAK_SUB",
+  "email_verified": true,
+  "preferred_username": "user1",
+  "email": "user1@example.com"
+}
+EOF
+)
+
+USER2_KEYCLOAK_USERINFO=$(cat <<EOF
+{
+  "sub": "$USER2_KEYCLOAK_SUB",
+  "email_verified": false,
+  "preferred_username": "user2",
+  "email": "user2@example.net",
+  "statusVisible": false
+}
+EOF
+)
+
+USER3_KEYCLOAK_USERINFO=$(cat <<EOF
+{
+  "sub": "$USER3_KEYCLOAK_SUB",
+  "email_verified": false,
+  "preferred_username": "user3",
+  "email": "user3@example.org",
+  "presenceVisible": false
+}
+EOF
+)
 
 nats -s "127.0.0.1" pub presence.update "$USER1_KEYCLOAK_USERINFO"
 nats -s "127.0.0.1" pub presence.update "$USER2_KEYCLOAK_USERINFO"
