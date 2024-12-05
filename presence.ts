@@ -88,9 +88,7 @@ async function replyPresenceAll(nc: NatsConnection) {
       const users = [] as UserInfo[];
 
       usersAll.forEach((user, _k) => {
-        if (user.presenceVisible) {
-          users.push(user);
-        }
+        if (user.presenceVisible) users.push(user);
       });
 
       m.respond(JSON.stringify(users));
@@ -117,7 +115,10 @@ async function replyPresenceOnline(nc: NatsConnection) {
       }
 
       usersAll.forEach((user, _k) => {
-        if (user.presenceVisible && user.presenceEpoch > lastSeenSecond) {
+        if (
+          user.presenceVisible && user.statusVisible &&
+          user.presenceEpoch > lastSeenSecond
+        ) {
           users.push(user);
         }
       });
@@ -165,7 +166,7 @@ async function replyPresenceIsOnline(nc: NatsConnection) {
       const userInfo = usersAll.get(presenceId);
 
       if (
-        userInfo && userInfo.presenceVisible &&
+        userInfo && userInfo.presenceVisible && userInfo.statusVisible &&
         userInfo.presenceEpoch > lastSeenSecond
       ) {
         m.respond(JSON.stringify(true));
