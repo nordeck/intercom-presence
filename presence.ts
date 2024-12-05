@@ -34,7 +34,6 @@ async function subPresenceUpdate(nc: NatsConnection) {
       const time = new Date();
       userInfo.presenceEpoch = time.getTime();
       userInfo.presenceTime = time.toISOString();
-      userInfo.presenceVisible = userInfo.presenceVisible || true;
 
       if (userInfo.presenceVisible === undefined) {
         userInfo.presenceVisible = true;

@@ -91,18 +91,16 @@ EOF
 
 nats -s "127.0.0.1" pub presence.update "$USER1_KEYCLOAK_USERINFO"
 nats -s "127.0.0.1" pub presence.update "$USER2_KEYCLOAK_USERINFO"
+nats -s "127.0.0.1" pub presence.update "$USER3_KEYCLOAK_USERINFO"
 
 nats -s "127.0.0.1" req presence.all ""
 nats -s "127.0.0.1" req presence.online ""
 nats -s "127.0.0.1" req presence.online "30"
 
 nats -s "127.0.0.1" req presence.whoami "$USER1_KEYCLOAK_SUB"
-nats -s "127.0.0.1" req presence.whoami "$USER2_KEYCLOAK_SUB"
 nats -s "127.0.0.1" req presence.isonline "$USER1_KEYCLOAK_SUB"
-nats -s "127.0.0.1" req presence.isonline "$USER2_KEYCLOAK_SUB"
 
 nats -s "127.0.0.1" pub presence.ping "$USER1_KEYCLOAK_SUB"
-nats -s "127.0.0.1" pub presence.ping "$USER2_KEYCLOAK_SUB"
 ```
 
 ## Links
