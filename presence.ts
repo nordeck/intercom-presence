@@ -156,7 +156,7 @@ async function subStatusHide(nc: NatsConnection) {
 }
 
 // -----------------------------------------------------------------------------
-// subStatusUnhide: Unhide the user, set statusVisible
+// subStatusUnhide: Unhide the user status, set statusVisible
 // -----------------------------------------------------------------------------
 async function subStatusUnhide(nc: NatsConnection) {
   await statusVisibility(nc, "presence.unhide_status", true);
