@@ -4,6 +4,7 @@ import type { NatsConnection } from "jsr:@nats-io/nats-core@3.0.0-46";
 
 const SERVERS = { servers: "127.0.0.1:4222" };
 const ONLINE_TIMEOUT_SECONDS = 120;
+const EXIST_TIMEOUT_SECONDS = 30 * 24 * 60 * 60;
 const UUID_NAMESPACE = "6ba7b810-9dad-11d1-80b4-00c04fd430c8";
 
 interface UserInfo {
@@ -171,8 +172,19 @@ async function replyPresenceAll(nc: NatsConnection) {
     try {
       const users = [] as UserInfo[];
 
+      let lastSeenSecond = Date.now() - EXIST_TIMEOUT_SECONDS * 1000;
+      const input = m.string();
+      if (input && input.match(/^\d+$/)) {
+        lastSeenSecond = Date.now() - Number(input) * 1000;
+      }
+
       usersAll.forEach((user, _k) => {
-        if (user.presenceVisible) users.push(user);
+        if (
+          user.presenceVisible &&
+          user.presenceEpoch > lastSeenSecond
+        ) {
+          users.push(user);
+        }
       });
 
       m.respond(JSON.stringify(users));

@@ -94,6 +94,7 @@ nats -s "127.0.0.1" pub presence.update "$USER2_KEYCLOAK_USERINFO"
 nats -s "127.0.0.1" pub presence.update "$USER3_KEYCLOAK_USERINFO"
 
 nats -s "127.0.0.1" req presence.all "" | jq .
+nats -s "127.0.0.1" req presence.all "3600" | jq .
 nats -s "127.0.0.1" req presence.online "" | jq .
 nats -s "127.0.0.1" req presence.online "30" | jq .
 
