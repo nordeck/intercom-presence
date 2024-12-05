@@ -101,6 +101,16 @@ nats -s "127.0.0.1" req presence.whoami "$USER1_KEYCLOAK_SUB" | jq .
 nats -s "127.0.0.1" req presence.isonline "$USER1_KEYCLOAK_SUB"
 
 nats -s "127.0.0.1" pub presence.ping "$USER1_KEYCLOAK_SUB"
+
+nats -s "127.0.0.1" pub presence.hide "$USER1_KEYCLOAK_SUB"
+nats -s "127.0.0.1" req presence.all "" | jq .
+nats -s "127.0.0.1" pub presence.unhide "$USER1_KEYCLOAK_SUB"
+nats -s "127.0.0.1" req presence.all "" | jq .
+
+nats -s "127.0.0.1" pub presence.hide_status "$USER1_KEYCLOAK_SUB"
+nats -s "127.0.0.1" req presence.online "" | jq .
+nats -s "127.0.0.1" pub presence.unhide_status "$USER1_KEYCLOAK_SUB"
+nats -s "127.0.0.1" req presence.online "" | jq .
 ```
 
 ## Links
