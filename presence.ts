@@ -78,6 +78,48 @@ async function subPresencePing(nc: NatsConnection) {
 }
 
 // -----------------------------------------------------------------------------
+// hideHandler
+// -----------------------------------------------------------------------------
+async function hideHandler(
+  nc: NatsConnection,
+  subject: string,
+  value: boolean,
+) {
+  const sub = nc.subscribe(subject);
+
+  for await (const m of sub) {
+    try {
+      if (!m.string()) throw "not valid key";
+
+      const presenceSub = new TextEncoder().encode(m.string());
+      const presenceId = await uuid.generate(UUID_NAMESPACE, presenceSub);
+      const userInfo = usersAll.get(presenceId);
+
+      if (userInfo) {
+        userInfo.presenceVisible = value;
+        usersAll.set(presenceId, userInfo);
+      }
+    } catch (e) {
+      console.error(e);
+    }
+  }
+}
+
+// -----------------------------------------------------------------------------
+// subPresenceHide: Hide the user, unset presenceVisible
+// -----------------------------------------------------------------------------
+async function subPresenceHide(nc: NatsConnection) {
+  await hideHandler(nc, "presence.hide", false);
+}
+
+// -----------------------------------------------------------------------------
+// subPresenceUnhide: Unhide the user, set presenceVisible
+// -----------------------------------------------------------------------------
+async function subPresenceUnhide(nc: NatsConnection) {
+  await hideHandler(nc, "presence.unhide", true);
+}
+
+// -----------------------------------------------------------------------------
 // replyPresenceAll: Return the list of all users.
 // -----------------------------------------------------------------------------
 async function replyPresenceAll(nc: NatsConnection) {
@@ -187,6 +229,8 @@ const nc = await connect(SERVERS);
 
 subPresenceUpdate(nc);
 subPresencePing(nc);
+subPresenceHide(nc);
+subPresenceUnhide(nc);
 replyPresenceAll(nc);
 replyPresenceOnline(nc);
 replyPresenceWhoami(nc);
