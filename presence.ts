@@ -85,7 +85,15 @@ async function replyPresenceAll(nc: NatsConnection) {
 
   for await (const m of sub) {
     try {
-      m.respond(JSON.stringify([...usersAll]));
+      const users = [] as UserInfo[];
+
+      usersAll.forEach((user, _k) => {
+        if (user.presenceVisible) {
+          users.push(user);
+        }
+      });
+
+      m.respond(JSON.stringify(users));
     } catch (e) {
       console.error(e);
     }
@@ -100,7 +108,7 @@ async function replyPresenceOnline(nc: NatsConnection) {
 
   for await (const m of sub) {
     try {
-      const usersOnline = [] as UserInfo[];
+      const users = [] as UserInfo[];
 
       let lastSeenSecond = Date.now() - ONLINE_TIMEOUT_SECONDS * 1000;
       const input = m.string();
@@ -109,12 +117,12 @@ async function replyPresenceOnline(nc: NatsConnection) {
       }
 
       usersAll.forEach((user, _k) => {
-        if (user.presenceEpoch > lastSeenSecond) {
-          usersOnline.push(user);
+        if (user.presenceVisible && user.presenceEpoch > lastSeenSecond) {
+          users.push(user);
         }
       });
 
-      m.respond(JSON.stringify(usersOnline));
+      m.respond(JSON.stringify(users));
     } catch (e) {
       console.error(e);
     }
@@ -156,7 +164,10 @@ async function replyPresenceIsOnline(nc: NatsConnection) {
       const lastSeenSecond = Date.now() - ONLINE_TIMEOUT_SECONDS * 1000;
       const userInfo = usersAll.get(presenceId);
 
-      if (userInfo && userInfo.presenceEpoch > lastSeenSecond) {
+      if (
+        userInfo && userInfo.presenceVisible &&
+        userInfo.presenceEpoch > lastSeenSecond
+      ) {
         m.respond(JSON.stringify(true));
         continue;
       }
