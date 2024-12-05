@@ -78,9 +78,9 @@ async function subPresencePing(nc: NatsConnection) {
 }
 
 // -----------------------------------------------------------------------------
-// hideHandler
+// presenceVisibility
 // -----------------------------------------------------------------------------
-async function hideHandler(
+async function presenceVisibility(
   nc: NatsConnection,
   subject: string,
   value: boolean,
@@ -109,14 +109,56 @@ async function hideHandler(
 // subPresenceHide: Hide the user, unset presenceVisible
 // -----------------------------------------------------------------------------
 async function subPresenceHide(nc: NatsConnection) {
-  await hideHandler(nc, "presence.hide", false);
+  await presenceVisibility(nc, "presence.hide", false);
 }
 
 // -----------------------------------------------------------------------------
 // subPresenceUnhide: Unhide the user, set presenceVisible
 // -----------------------------------------------------------------------------
 async function subPresenceUnhide(nc: NatsConnection) {
-  await hideHandler(nc, "presence.unhide", true);
+  await presenceVisibility(nc, "presence.unhide", true);
+}
+
+// -----------------------------------------------------------------------------
+// statusVisibility
+// -----------------------------------------------------------------------------
+async function statusVisibility(
+  nc: NatsConnection,
+  subject: string,
+  value: boolean,
+) {
+  const sub = nc.subscribe(subject);
+
+  for await (const m of sub) {
+    try {
+      if (!m.string()) throw "not valid key";
+
+      const presenceSub = new TextEncoder().encode(m.string());
+      const presenceId = await uuid.generate(UUID_NAMESPACE, presenceSub);
+      const userInfo = usersAll.get(presenceId);
+
+      if (userInfo) {
+        userInfo.statusVisible = value;
+        usersAll.set(presenceId, userInfo);
+      }
+    } catch (e) {
+      console.error(e);
+    }
+  }
+}
+
+// -----------------------------------------------------------------------------
+// subStatusHide: Hide the user status, unset statusVisible
+// -----------------------------------------------------------------------------
+async function subStatusHide(nc: NatsConnection) {
+  await statusVisibility(nc, "presence.hide_status", false);
+}
+
+// -----------------------------------------------------------------------------
+// subStatusUnhide: Unhide the user, set statusVisible
+// -----------------------------------------------------------------------------
+async function subStatusUnhide(nc: NatsConnection) {
+  await statusVisibility(nc, "presence.unhide_status", true);
 }
 
 // -----------------------------------------------------------------------------
@@ -231,6 +273,8 @@ subPresenceUpdate(nc);
 subPresencePing(nc);
 subPresenceHide(nc);
 subPresenceUnhide(nc);
+subStatusHide(nc);
+subStatusUnhide(nc);
 replyPresenceAll(nc);
 replyPresenceOnline(nc);
 replyPresenceWhoami(nc);
