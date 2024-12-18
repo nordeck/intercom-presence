@@ -39,6 +39,14 @@ In this directory:
 deno --allow-net presence.ts
 ```
 
+## Notification service
+
+In this directory:
+
+```bash
+deno --allow-net notification.ts
+```
+
 ## NATS CLI
 
 Open https://github.com/nats-io/natscli/releases/latest and download the
@@ -50,7 +58,7 @@ unzip nats-0.1.5-linux-amd64.zip
 cp /tmp/nats-0.1.5-linux-amd64/nats ~/bin/
 ```
 
-## Testing
+## Testing (presence)
 
 ```bash
 USER1_KEYCLOAK_SUB="f:d704f61d-fade-4641-b03a-1f211206c5b6:user1"
@@ -112,6 +120,29 @@ nats -s "127.0.0.1" pub presence.hide_status "$USER1_KEYCLOAK_SUB"
 nats -s "127.0.0.1" req presence.online "" | jq .
 nats -s "127.0.0.1" pub presence.unhide_status "$USER1_KEYCLOAK_SUB"
 nats -s "127.0.0.1" req presence.online "" | jq .
+```
+
+## Testing (notification)
+
+```bash
+USER1_UUID="809e1ece-5750-53df-bd27-922a8a8f4e4c"
+USER2_UUID="9d023a2c-e5cd-5bc8-8e13-eaf4a1aebb59"
+USER3_UUID="aa74b515-6eb4-5b77-9434-99312a4eeb17"
+
+CALL1=$(cat <<EOF
+{
+  "id": "1234-abcd",
+  "type": "call",
+  "callee": "user3",
+  "url": "https://meet.mydomain.com/some-room-name"
+}
+EOF
+)
+
+for i in $(seq 10); do
+  nats -s "127.0.0.1" pub notification.$USER1_UUID "$CALL1"
+  sleep 1
+done
 ```
 
 ## Links
