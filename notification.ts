@@ -89,17 +89,21 @@ function createStream(channel: string): ReadableStream {
       const encoder = new TextEncoder();
       const sub = nc.subscribe(channel);
 
-      for await (const _m of sub) {
-        if (closed) {
-          sub.unsubscribe();
-          break;
-        }
-
+      for await (const m of sub) {
         try {
+          if (closed) {
+            sub.unsubscribe();
+            break;
+          }
+
+          if (!m.string()) throw "invalid pub message";
+          const msg = JSON.parse(m.string());
+
           const data = {
-            "type": "call",
-            "callee": "userx",
-            "url": "https://meet.mydomain.com",
+            "id": msg.id,
+            "type": msg.type,
+            "callee": msg.callee,
+            "url": msg.url,
           };
           const jsonData = JSON.stringify(data);
           const eventData = encoder.encode(`data: ${jsonData}\n\n`);
