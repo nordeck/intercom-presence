@@ -82,25 +82,36 @@ async function getChannel(req: Request): Promise<string> {
 
 // -----------------------------------------------------------------------------
 function createStream(channel: string): ReadableStream {
-  console.log(channel);
+  let closed = false;
 
   const stream = new ReadableStream({
     async start(controller) {
       const encoder = new TextEncoder();
       const sub = nc.subscribe(channel);
 
-      for await (const m of sub) {
+      for await (const _m of sub) {
+        if (closed) {
+          sub.unsubscribe();
+          break;
+        }
+
         try {
-          console.log(m);
-          const data = encoder.encode(`data: coming message\n\n`);
-          controller.enqueue(data);
+          const data = {
+            "type": "call",
+            "callee": "userx",
+            "url": "https://meet.mydomain.com",
+          };
+          const jsonData = JSON.stringify(data);
+          const eventData = encoder.encode(`data: ${jsonData}\n\n`);
+
+          controller.enqueue(eventData);
         } catch (e) {
           console.error(e);
         }
       }
     },
     cancel() {
-      console.log("cancelled");
+      closed = true;
     },
   });
 
