@@ -2,15 +2,25 @@
 <html>
   <head>
     <title>Notification</title>
+
     <script>
-      globalThis.user = "user1";
+      globalThis.notification = globalThis.notification || {};
+      globalThis.notification.user = "user1";
     </script>
+
+    <style>
+      .notificationToast {
+        position: fixed;
+        top: 1px;
+        right: 1px;
+        z-index: 1000;
+      }
+    </style>
   </head>
   <body>
-    <h1>
-      Notification for
-      <span id="user"></span>
-    </h1>
+    <h1><span id="user"></span></h1>
+
+    <div id="notificationContainer" class="notificationToast"></div>
 
     <script src="notification.js"></script>
   </body>
