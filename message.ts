@@ -1,4 +1,4 @@
-import { v5 as uuid } from "jsr:@std/uuid@^1.0.0";
+import { v1, v5 as uuid } from "jsr:@std/uuid@^1.0.0";
 import { connect } from "jsr:@nats-io/transport-deno@3.0.0-18";
 import type { NatsConnection } from "jsr:@nats-io/nats-core@3.0.0-46";
 
@@ -89,12 +89,15 @@ async function add(req: Request): Promise<Response> {
   const callerUuid = await uuid.generate(UUID_NAMESPACE, callerEncodedId);
   const calleeEncodedId = encoder.encode(calleeId);
   const calleeUuid = await uuid.generate(UUID_NAMESPACE, calleeEncodedId);
+  const callRawId = encoder.encode(v1.generate());
+  const callId = await uuid.generate(UUID_NAMESPACE, callRawId);
 
   const headers = {} as Headers;
   if (CORS_ORIGIN) headers["Access-Control-Allow-Origin"] = CORS_ORIGIN;
 
   const body = {
     "type": "call",
+    "call_id": callId,
   };
 
   return new Response(JSON.stringify(body), {
