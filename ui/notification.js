@@ -1,22 +1,25 @@
 let i = 0;
 
 // -----------------------------------------------------------------------------
-// removeNotification
+// removeCall
 // -----------------------------------------------------------------------------
-function removeNotification(msgId, msgDiv) {
+function removeCall(msgId, msgDiv) {
   if (!msgId) throw "invalid message id";
   if (!msgDiv) throw "missing message div";
   if (!globalThis.notification[`call-${msgId}`]) throw "missing notification";
 
+  // Check later if it is still ringing.
   if (Number(globalThis.notification[`call-${msgId}`]) > Date.now() - 3000) {
     setTimeout(() => {
-      removeNotification(msgId, msgDiv);
+      removeCall(msgId, msgDiv);
     }, 1000);
 
     return;
   }
 
   console.error("remove");
+
+  // Remove objects of this call.
   delete globalThis.notification[`call-${msgId}`];
   msgDiv.remove();
 }
@@ -31,11 +34,13 @@ function callHandler(data) {
   const msgId = data?.id;
   if (!msgId) throw "invalid id";
 
+  // If this is a follow-up message then just update the timer.
   if (globalThis.notification[`call-${msgId}`]) {
     globalThis.notification[`call-${msgId}`] = Date.now();
     return;
   }
 
+  // If this is the initial message then create UI elements.
   const toast = document.getElementById("notificationContainer");
   const msgDiv = document.createElement("div");
   msgDiv.textContent = `${data?.callee} - ${i}`;
@@ -44,8 +49,10 @@ function callHandler(data) {
 
   globalThis.notification[`call-${msgId}`] = Date.now();
 
+  // Trigger the remove job which will delete UI elements if it doesn't ring
+  // anymore.
   setTimeout(() => {
-    removeNotification(msgId, msgDiv);
+    removeCall(msgId, msgDiv);
   }, 1000);
 }
 
