@@ -11,7 +11,7 @@ CALL=$(cat <<EOF
 EOF
 )
 
-for i in $(seq 10); do
+for i in $(seq 6); do
   nats -s "127.0.0.1" pub notification.$USER1_UUID "$CALL"
   sleep 1
 done
