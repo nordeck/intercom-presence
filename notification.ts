@@ -2,11 +2,19 @@ import { v5 as uuid } from "jsr:@std/uuid@^1.0.0";
 import { connect } from "jsr:@nats-io/transport-deno@3.0.0-18";
 import type { NatsConnection } from "jsr:@nats-io/nats-core@3.0.0-46";
 
+// -----------------------------------------------------------------------------
+// Globals
+// -----------------------------------------------------------------------------
 const NATS_SERVERS = { servers: "127.0.0.1:4222" };
 const HTTP_HOSTNAME = "0.0.0.0";
 const HTTP_PORT = 8000;
 const PRE = "/intercom";
 const UUID_NAMESPACE = "6ba7b810-9dad-11d1-80b4-00c04fd430c8";
+const CORS_ORIGIN = "*";
+
+interface Headers {
+  [key: string]: string;
+}
 
 // -----------------------------------------------------------------------------
 export function methodNotAllowed(): Response {
@@ -16,11 +24,12 @@ export function methodNotAllowed(): Response {
     },
   };
 
+  const headers = {} as Headers;
+  if (CORS_ORIGIN) headers["Access-Control-Allow-Origin"] = CORS_ORIGIN;
+
   return new Response(JSON.stringify(body), {
     status: 405,
-    headers: {
-      "Access-Control-Allow-Origin": "*",
-    },
+    headers,
   });
 }
 
@@ -32,11 +41,12 @@ export function notFound(): Response {
     },
   };
 
+  const headers = {} as Headers;
+  if (CORS_ORIGIN) headers["Access-Control-Allow-Origin"] = CORS_ORIGIN;
+
   return new Response(JSON.stringify(body), {
     status: 404,
-    headers: {
-      "Access-Control-Allow-Origin": "*",
-    },
+    headers,
   });
 }
 
@@ -48,11 +58,12 @@ export function unauthorized(): Response {
     },
   };
 
+  const headers = {} as Headers;
+  if (CORS_ORIGIN) headers["Access-Control-Allow-Origin"] = CORS_ORIGIN;
+
   return new Response(JSON.stringify(body), {
     status: 401,
-    headers: {
-      "Access-Control-Allow-Origin": "*",
-    },
+    headers,
   });
 }
 
