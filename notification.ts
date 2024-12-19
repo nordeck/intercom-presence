@@ -17,6 +17,8 @@ interface Headers {
 }
 
 // -----------------------------------------------------------------------------
+// methodNotAllowed
+// -----------------------------------------------------------------------------
 export function methodNotAllowed(): Response {
   const body = {
     error: {
@@ -33,6 +35,8 @@ export function methodNotAllowed(): Response {
   });
 }
 
+// -----------------------------------------------------------------------------
+// notFound
 // -----------------------------------------------------------------------------
 export function notFound(): Response {
   const body = {
@@ -51,6 +55,8 @@ export function notFound(): Response {
 }
 
 // -----------------------------------------------------------------------------
+// unauthorized
+// -----------------------------------------------------------------------------
 export function unauthorized(): Response {
   const body = {
     error: {
@@ -68,6 +74,8 @@ export function unauthorized(): Response {
 }
 
 // -----------------------------------------------------------------------------
+// getChannel
+//
 // It returns the hardcoded pub channel for now. Auth checking will be added.
 // -----------------------------------------------------------------------------
 async function getChannel(req: Request): Promise<string> {
@@ -91,6 +99,8 @@ async function getChannel(req: Request): Promise<string> {
   }
 }
 
+// -----------------------------------------------------------------------------
+// createStream
 // -----------------------------------------------------------------------------
 function createStream(channel: string): ReadableStream {
   let closed = false;
@@ -134,21 +144,26 @@ function createStream(channel: string): ReadableStream {
 }
 
 // -----------------------------------------------------------------------------
+// notification
+// -----------------------------------------------------------------------------
 async function notification(req: Request): Promise<Response> {
   const channel = await getChannel(req);
   if (!channel) return unauthorized();
 
   const stream = createStream(channel);
+
   const headers = {
     "Content-Type": "text/event-stream",
     "Cache-Control": "no-cache",
     "Connection": "keep-alive",
-    "Access-Control-Allow-Origin": "*",
-  };
+  } as Headers;
+  if (CORS_ORIGIN) headers["Access-Control-Allow-Origin"] = CORS_ORIGIN;
 
   return new Response(stream, { headers });
 }
 
+// -----------------------------------------------------------------------------
+// handler
 // -----------------------------------------------------------------------------
 async function handler(req: Request): Promise<Response> {
   // check method
@@ -167,6 +182,8 @@ async function handler(req: Request): Promise<Response> {
 }
 
 // -----------------------------------------------------------------------------
+// sseServer
+// -----------------------------------------------------------------------------
 function sseServer() {
   Deno.serve({
     hostname: HTTP_HOSTNAME,
@@ -174,6 +191,8 @@ function sseServer() {
   }, handler);
 }
 
+// -----------------------------------------------------------------------------
+// main
 // -----------------------------------------------------------------------------
 const nc = await connect(NATS_SERVERS) as NatsConnection;
 
