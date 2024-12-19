@@ -17,6 +17,7 @@ function removeNotification(msgId, msgDiv) {
   }
 
   console.error("remove");
+  delete globalThis.notification[`call-${msgId}`];
   msgDiv.remove();
 }
 
