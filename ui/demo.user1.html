@@ -18,9 +18,74 @@
     </style>
   </head>
   <body>
+    <div id="notificationContainer" class="notificationToast"></div>
+
     <h1><span id="user"></span></h1>
 
-    <div id="notificationContainer" class="notificationToast"></div>
+    <form
+      id="callForm"
+      action="http://127.0.0.1:8001/intercom/call/add"
+      method="POST"
+    >
+      <label
+        for="caller"
+        style="width: 100px; display: inline-block"
+      >Caller:</label>
+      <input
+        type="text"
+        id="caller"
+        name="caller"
+        value="f:d704f61d-fade-4641-b03a-1f211206c5b6:user1"
+        required
+        style="width: 300px"
+      >
+      <br />
+      <label
+        for="callee"
+        style="width: 100px; display: inline-block"
+      >Callee:</label>
+      <input
+        type="text"
+        id="callee"
+        name="callee"
+        value="f:d704f61d-fade-4641-b03a-1f211206c5b6:user2"
+        required
+        style="width: 300px"
+      >
+      <br />
+      <button type="submit">Call</button>
+    </form>
+
+    <script>
+      const form = document.getElementById("callForm");
+
+      form.addEventListener("submit", async (e) => {
+        e.preventDefault();
+
+        const callerId = document.getElementById("caller").value;
+        const calleeId = document.getElementById("callee").value;
+        const payload = {
+          "caller_id": callerId,
+          "callee_id": calleeId,
+          "caller_name": globalThis.notification.user,
+        };
+
+        try {
+          const res = await fetch(form.action, {
+            headers: {
+              Accept: "application/json",
+            },
+            mode: "cors",
+            method: "post",
+            body: JSON.stringify(payload),
+          });
+
+          console.error(await res.json());
+        } catch (err) {
+          console.error(err);
+        }
+      });
+    </script>
 
     <script src="notification.js"></script>
   </body>
