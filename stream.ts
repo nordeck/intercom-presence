@@ -182,9 +182,9 @@ async function handler(req: Request): Promise<Response> {
 }
 
 // -----------------------------------------------------------------------------
-// sseServer
+// streamServer
 // -----------------------------------------------------------------------------
-function sseServer() {
+function streamServer() {
   Deno.serve({
     hostname: HTTP_HOSTNAME,
     port: HTTP_PORT,
@@ -196,6 +196,6 @@ function sseServer() {
 // -----------------------------------------------------------------------------
 const nc = await connect(NATS_SERVERS) as NatsConnection;
 
-sseServer();
+streamServer();
 
 await nc.closed();

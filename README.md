@@ -39,12 +39,12 @@ In this directory:
 deno --allow-net presence.ts
 ```
 
-## Notification service
+## Stream service
 
 In this directory:
 
 ```bash
-deno --allow-net notification.ts
+deno --allow-net stream.ts
 ```
 
 ## NATS CLI
@@ -122,7 +122,7 @@ nats -s "127.0.0.1" pub presence.unhide_status "$USER1_KEYCLOAK_SUB"
 nats -s "127.0.0.1" req presence.online "" | jq .
 ```
 
-## Testing (notification)
+## Testing (notification stream)
 
 ```bash
 USER1_UUID="809e1ece-5750-53df-bd27-922a8a8f4e4c"
