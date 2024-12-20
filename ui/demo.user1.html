@@ -1,30 +1,20 @@
 <!DOCTYPE html>
 <html>
   <head>
-    <title>Notification</title>
+    <title>Call</title>
 
     <script>
       globalThis.notification = globalThis.notification || {};
       globalThis.notification.user = "user1";
     </script>
-
-    <style>
-      .notificationToast {
-        position: fixed;
-        top: 1px;
-        right: 1px;
-        z-index: 1000;
-      }
-    </style>
   </head>
-  <body>
-    <div id="notificationContainer" class="notificationToast"></div>
 
+  <body>
     <h1><span id="user"></span></h1>
 
     <form
       id="callForm"
-      action="http://127.0.0.1:8001/intercom/call/add"
+      action="http://127.0.0.1:8002/intercom/call/add"
       method="POST"
     >
       <label
@@ -40,6 +30,7 @@
         style="width: 300px"
       >
       <br />
+
       <label
         for="callee"
         style="width: 100px; display: inline-block"
@@ -53,10 +44,14 @@
         style="width: 300px"
       >
       <br />
+
       <button type="submit">Call</button>
     </form>
 
     <script>
+      const el = document.getElementById("user");
+      el.textContent = globalThis.notification.user;
+
       const form = document.getElementById("callForm");
 
       form.addEventListener("submit", async (e) => {

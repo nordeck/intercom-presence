@@ -1,6 +1,28 @@
 let i = 0;
 
 // -----------------------------------------------------------------------------
+// getUser
+// -----------------------------------------------------------------------------
+function getUser() {
+  return globalThis.notification.user;
+}
+
+// -----------------------------------------------------------------------------
+// createNotificationContainer
+// -----------------------------------------------------------------------------
+function createNotificationContainer() {
+  const notificationContainer = document.createElement("div");
+
+  notificationContainer.id = "notificationContainer";
+  notificationContainer.style.position = "fixed";
+  notificationContainer.style.top = "1px";
+  notificationContainer.style.right = "1px";
+  notificationContainer.style.zIndex = "1000";
+
+  document.body.appendChild(notificationContainer);
+}
+
+// -----------------------------------------------------------------------------
 // removeCall
 // -----------------------------------------------------------------------------
 function removeCall(msgId, msgDiv) {
@@ -71,23 +93,32 @@ function onMessage(e) {
 }
 
 // -----------------------------------------------------------------------------
+// subscribe
+// -----------------------------------------------------------------------------
+function subscribe(user) {
+  const src = `http://127.0.0.1:8001/intercom/notification?user=${user}`;
+  const eventSrc = new EventSource(src);
+
+  eventSrc.onmessage = (e) => {
+    onMessage(e);
+  };
+
+  eventSrc.onerror = () => {
+    console.error("eventSrc failed.");
+  };
+}
+
+// -----------------------------------------------------------------------------
 // main
 // -----------------------------------------------------------------------------
-// Create a namespace if it doesn't exist.
+// Create the namespace.
 globalThis.notification = globalThis.notification || {};
 
-const user = globalThis.notification.user;
-const src = `http://127.0.0.1:8000/intercom/notification?user=${user}`;
+// Create the notification panel in UI
+createNotificationContainer();
 
-const el = document.getElementById("user");
-el.textContent = user;
+// This will be Keycloak's token in the future.
+const user = getUser();
 
-const eventSrc = new EventSource(src);
-
-eventSrc.onmessage = (e) => {
-  onMessage(e);
-};
-
-eventSrc.onerror = () => {
-  console.error("eventSrc failed.");
-};
+// Subscribe to the notification channel.
+subscribe(user);
