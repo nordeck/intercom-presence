@@ -20,12 +20,21 @@ CALL=$(cat <<EOF
 EOF
 )
 
-curl -s -X POST $MESSAGE_ENDPOINT \
-    -H "Accept: application/json" \
-    -H "Content-Type: application/json" \
-    --data "$CALL"
+RES=$(curl -s -X POST $MESSAGE_ENDPOINT \
+  -H "Accept: application/json" \
+  -H "Content-Type: application/json" \
+  --data "$CALL")
+echo $RES | jq .
 
-#for i in $(seq 6); do
-#  nats -s "127.0.0.1" pub notification.$USER1_UUID "$CALL"
-#  sleep 1
-#done
+CALL_ID=$(echo $RES | jq -r .call_id)
+RING=$(cat <<EOF
+{
+  "type": "ring"
+}
+EOF
+)
+
+for i in $(seq 6); do
+  nats -s "127.0.0.1" pub call.$CALL_ID "$RING"
+  sleep 1
+done
