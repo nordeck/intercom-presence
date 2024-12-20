@@ -122,11 +122,47 @@ async function addCall(req: Request): Promise<Response> {
 }
 
 // -----------------------------------------------------------------------------
+// ring
+// -----------------------------------------------------------------------------
+async function ring(callId: string, jsonMsg: string) {
+  const nc = await connect(NATS_SERVERS) as NatsConnection;
+  nc.publish(`call.${callId}`, jsonMsg);
+  nc.drain();
+}
+
+// -----------------------------------------------------------------------------
+// ringCall
+// -----------------------------------------------------------------------------
+async function ringCall(req: Request): Promise<Response> {
+  const pl = await req.json();
+  const callId = pl.call_id;
+
+  if (!callId) return unauthorized();
+
+  const headers = {} as Headers;
+  if (CORS_ORIGIN) headers["Access-Control-Allow-Origin"] = CORS_ORIGIN;
+
+  const body = {
+    "type": "ring",
+  };
+  const jsonBody = JSON.stringify(body);
+
+  await ring(callId, jsonBody);
+
+  return new Response(jsonBody, {
+    status: 200,
+    headers,
+  });
+}
+
+// -----------------------------------------------------------------------------
 // call
 // -----------------------------------------------------------------------------
 async function call(req: Request, path: string): Promise<Response> {
   if (path === `${PRE}/call/add`) {
     return await addCall(req);
+  } else if (path === `${PRE}/call/ring`) {
+    return await ringCall(req);
   } else {
     return notFound();
   }

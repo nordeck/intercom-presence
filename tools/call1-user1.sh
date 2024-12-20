@@ -5,7 +5,8 @@
 # ------------------------------------------------------------------------------
 
 MESSAGE_SERVER="http://127.0.0.1:8002"
-MESSAGE_ENDPOINT="$MESSAGE_SERVER/intercom/call/add"
+CALL_ENDPOINT="$MESSAGE_SERVER/intercom/call/add"
+RING_ENDPOINT="$MESSAGE_SERVER/intercom/call/ring"
 
 CALLER_NAME="user2"
 CALLER_KEYCLOAK_SUB="f:d704f61d-fade-4641-b03a-1f211206c5b6:user2"
@@ -20,21 +21,26 @@ CALL=$(cat <<EOF
 EOF
 )
 
-RES=$(curl -s -X POST $MESSAGE_ENDPOINT \
+RES=$(curl -s -X POST $CALL_ENDPOINT \
   -H "Accept: application/json" \
   -H "Content-Type: application/json" \
   --data "$CALL")
 echo $RES | jq .
 
 CALL_ID=$(echo $RES | jq -r .call_id)
+
 RING=$(cat <<EOF
 {
-  "type": "ring"
+  "call_id": "$CALL_ID"
 }
 EOF
 )
 
-for i in $(seq 6); do
-  nats -s "127.0.0.1" pub call.$CALL_ID "$RING"
+for i in $(seq 10); do
+  RES=$(curl -s -X POST $RING_ENDPOINT \
+    -H "Accept: application/json" \
+    -H "Content-Type: application/json" \
+    --data "$RING")
+  echo $RES | jq .
   sleep 1
 done

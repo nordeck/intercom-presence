@@ -145,7 +145,7 @@ function call(req: Request): Response {
   const callId = qs.get("id");
   if (!callId) return unauthorized();
 
-  const channel = `call-${callId}`;
+  const channel = `call.${callId}`;
   const stream = createStream(channel);
 
   const headers = {

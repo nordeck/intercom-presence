@@ -25,10 +25,12 @@ function createNotificationContainer() {
 // -----------------------------------------------------------------------------
 // onCall
 // -----------------------------------------------------------------------------
-function onCall(e) {
+function onCall(callId, e) {
   try {
     const data = JSON.parse(e.data);
     console.error(data);
+
+    globalThis.notification[`call-${callId}`] = Date.now();
   } catch {
     // do nothing
   }
@@ -42,7 +44,7 @@ function subscribeToCall(callId) {
   const eventSrc = new EventSource(src);
 
   eventSrc.onmessage = (e) => {
-    onCall(e);
+    onCall(callId, e);
   };
 
   eventSrc.onerror = () => {
