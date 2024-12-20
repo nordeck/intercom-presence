@@ -7,7 +7,7 @@ import type { NatsConnection } from "jsr:@nats-io/nats-core@3.0.0-46";
 // -----------------------------------------------------------------------------
 const NATS_SERVERS = { servers: "127.0.0.1:4222" };
 const HTTP_HOSTNAME = "0.0.0.0";
-const HTTP_PORT = 8000;
+const HTTP_PORT = 8001;
 const PRE = "/intercom";
 const UUID_NAMESPACE = "6ba7b810-9dad-11d1-80b4-00c04fd430c8";
 const CORS_ORIGIN = "*";
