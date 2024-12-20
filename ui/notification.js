@@ -50,8 +50,7 @@ function removeCall(msgId, msgDiv) {
 // callHandler
 // -----------------------------------------------------------------------------
 function callHandler(data) {
-  console.log(data);
-
+  console.error(data);
   const msgId = data?.id;
   if (!msgId) throw "invalid id";
 

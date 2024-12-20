@@ -80,7 +80,7 @@ export function unauthorized(): Response {
 async function notifyCall(userUUID: string, jsonMsg: string) {
   const nc = await connect(NATS_SERVERS) as NatsConnection;
   nc.publish(`notification.${userUUID}`, jsonMsg);
-  nc.close();
+  nc.drain();
 }
 
 // -----------------------------------------------------------------------------

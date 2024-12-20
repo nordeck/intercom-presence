@@ -117,18 +117,11 @@ function createStream(channel: string): ReadableStream {
             break;
           }
 
-          if (!m.string()) throw "invalid pub message";
-          const msg = JSON.parse(m.string());
+          // The coming message should be serialized JSON object.
+          const msg = m.string();
+          if (!msg) throw "invalid pub message";
 
-          const data = {
-            "id": msg.id,
-            "type": msg.type,
-            "callee": msg.callee,
-            "url": msg.url,
-          };
-          const jsonData = JSON.stringify(data);
-          const eventData = encoder.encode(`data: ${jsonData}\n\n`);
-
+          const eventData = encoder.encode(`data: ${msg}\n\n`);
           controller.enqueue(eventData);
         } catch (e) {
           console.error(e);
