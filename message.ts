@@ -11,6 +11,7 @@ const HTTP_PORT = 8002;
 const PRE = "/intercom";
 const UUID_NAMESPACE = "6ba7b810-9dad-11d1-80b4-00c04fd430c8";
 const CORS_ORIGIN = "*";
+const MEETING_SERVER = "https://meet.jit.si";
 
 interface Headers {
   [key: string]: string;
@@ -74,9 +75,18 @@ export function unauthorized(): Response {
 }
 
 // -----------------------------------------------------------------------------
-// add
+// notifyCall
 // -----------------------------------------------------------------------------
-async function add(req: Request): Promise<Response> {
+async function notifyCall(userUUID: string, jsonMsg: string) {
+  const nc = await connect(NATS_SERVERS) as NatsConnection;
+  nc.publish(`notification.${userUUID}`, jsonMsg);
+  nc.close();
+}
+
+// -----------------------------------------------------------------------------
+// addCall
+// -----------------------------------------------------------------------------
+async function addCall(req: Request): Promise<Response> {
   const pl = await req.json();
   const callerId = pl.caller_id;
   const callerName = pl.caller_name;
@@ -85,12 +95,11 @@ async function add(req: Request): Promise<Response> {
   if (!callerId) return unauthorized();
 
   const encoder = new TextEncoder();
-  const callerEncodedId = encoder.encode(callerId);
-  const callerUuid = await uuid.generate(UUID_NAMESPACE, callerEncodedId);
   const calleeEncodedId = encoder.encode(calleeId);
-  const calleeUuid = await uuid.generate(UUID_NAMESPACE, calleeEncodedId);
+  const calleeUUID = await uuid.generate(UUID_NAMESPACE, calleeEncodedId);
   const callRawId = encoder.encode(v1.generate());
   const callId = await uuid.generate(UUID_NAMESPACE, callRawId);
+  const callUrl = `${MEETING_SERVER}/${callId}`;
 
   const headers = {} as Headers;
   if (CORS_ORIGIN) headers["Access-Control-Allow-Origin"] = CORS_ORIGIN;
@@ -98,9 +107,15 @@ async function add(req: Request): Promise<Response> {
   const body = {
     "type": "call",
     "call_id": callId,
+    "call_url": callUrl,
+    "caller_id": callerId,
+    "caller_name": callerName,
   };
+  const jsonBody = JSON.stringify(body);
 
-  return new Response(JSON.stringify(body), {
+  await notifyCall(calleeUUID, jsonBody);
+
+  return new Response(jsonBody, {
     status: 200,
     headers,
   });
@@ -111,7 +126,7 @@ async function add(req: Request): Promise<Response> {
 // -----------------------------------------------------------------------------
 async function call(req: Request, path: string): Promise<Response> {
   if (path === `${PRE}/call/add`) {
-    return await add(req);
+    return await addCall(req);
   } else {
     return notFound();
   }
@@ -149,8 +164,4 @@ function messageServer() {
 // -----------------------------------------------------------------------------
 // main
 // -----------------------------------------------------------------------------
-const nc = await connect(NATS_SERVERS) as NatsConnection;
-
 messageServer();
-
-await nc.closed();
