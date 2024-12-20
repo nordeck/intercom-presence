@@ -51,25 +51,23 @@ function removeCall(msgId, msgDiv) {
 // -----------------------------------------------------------------------------
 function callHandler(data) {
   console.log(data);
-  console.log(data?.callee);
 
   const msgId = data?.id;
   if (!msgId) throw "invalid id";
 
-  // If this is a follow-up message then just update the timer.
-  if (globalThis.notification[`call-${msgId}`]) {
-    globalThis.notification[`call-${msgId}`] = Date.now();
-    return;
-  }
+  const isExist = document.getElementById(`call-${msgId}`);
+  if (isExist) throw "message element is already created";
 
-  // If this is the initial message then create UI elements.
+  // Initialize the call timer.
+  globalThis.notification[`call-${msgId}`] = Date.now();
+
+  // Create the message element.
   const toast = document.getElementById("notificationContainer");
   const msgDiv = document.createElement("div");
+  msgDiv.id = `call-${msgId}`;
   msgDiv.textContent = `${data?.callee} - ${i}`;
   toast.appendChild(msgDiv);
   i = i + 1;
-
-  globalThis.notification[`call-${msgId}`] = Date.now();
 
   // Trigger the remove job which will delete UI elements if it doesn't ring
   // anymore.
@@ -84,8 +82,11 @@ function callHandler(data) {
 function onMessage(e) {
   try {
     const data = JSON.parse(e.data);
+
     if (data?.type === "call") {
       callHandler(data);
+    } else {
+      throw "unknown notification type";
     }
   } catch {
     // do nothing
@@ -114,7 +115,7 @@ function subscribe(user) {
 // Create the namespace.
 globalThis.notification = globalThis.notification || {};
 
-// Create the notification panel in UI
+// Create the notification container in UI
 createNotificationContainer();
 
 // This will be Keycloak's token in the future.
