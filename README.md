@@ -124,26 +124,7 @@ nats -s "127.0.0.1" req presence.online "" | jq .
 
 ## Testing (notification stream)
 
-```bash
-USER1_UUID="809e1ece-5750-53df-bd27-922a8a8f4e4c"
-USER2_UUID="9d023a2c-e5cd-5bc8-8e13-eaf4a1aebb59"
-USER3_UUID="aa74b515-6eb4-5b77-9434-99312a4eeb17"
-
-CALL1=$(cat <<EOF
-{
-  "id": "1234-abcd",
-  "type": "call",
-  "callee": "user3",
-  "url": "https://meet.mydomain.com/some-room-name"
-}
-EOF
-)
-
-for i in $(seq 10); do
-  nats -s "127.0.0.1" pub notification.$USER1_UUID "$CALL1"
-  sleep 1
-done
-```
+Use scripts in [tools](tools).
 
 ## Links
 
