@@ -1,4 +1,4 @@
-let i = 0;
+STREAM_SERVER = "http://127.0.0.1:8001";
 
 // -----------------------------------------------------------------------------
 // getUser
@@ -23,62 +23,89 @@ function createNotificationContainer() {
 }
 
 // -----------------------------------------------------------------------------
+// onCall
+// -----------------------------------------------------------------------------
+function onCall(e) {
+  try {
+    const data = JSON.parse(e.data);
+    console.error(data);
+  } catch {
+    // do nothing
+  }
+}
+
+// -----------------------------------------------------------------------------
+// subscribeToCall
+// -----------------------------------------------------------------------------
+function subscribeToCall(callId) {
+  const src = `${STREAM_SERVER}/intercom/call?id=${callId}`;
+  const eventSrc = new EventSource(src);
+
+  eventSrc.onmessage = (e) => {
+    onCall(e);
+  };
+
+  eventSrc.onerror = () => {
+    console.error("notification channel failed.");
+  };
+}
+
+// -----------------------------------------------------------------------------
 // removeCall
 // -----------------------------------------------------------------------------
-function removeCall(msgId, msgDiv) {
-  if (!msgId) throw "invalid message id";
-  if (!msgDiv) throw "missing message div";
-  if (!globalThis.notification[`call-${msgId}`]) throw "missing notification";
+function removeCall(callId, callDiv) {
+  if (!callId) throw "invalid call id";
+  if (!callDiv) throw "missing call div";
+  if (!globalThis.notification[`call-${callId}`]) throw "missing call timer";
 
   // Check later if it is still ringing.
-  if (Number(globalThis.notification[`call-${msgId}`]) > Date.now() - 3000) {
+  if (Number(globalThis.notification[`call-${callId}`]) > Date.now() - 3000) {
     setTimeout(() => {
-      removeCall(msgId, msgDiv);
+      removeCall(callId, callDiv);
     }, 1000);
 
     return;
   }
 
-  console.error("remove");
-
   // Remove objects of this call.
-  delete globalThis.notification[`call-${msgId}`];
-  msgDiv.remove();
+  delete globalThis.notification[`call-${callId}`];
+  callDiv.remove();
 }
 
 // -----------------------------------------------------------------------------
 // callHandler
 // -----------------------------------------------------------------------------
 function callHandler(data) {
-  console.error(data);
-  const msgId = data?.id;
-  if (!msgId) throw "invalid id";
+  const callId = data?.call_id;
+  if (!callId) throw "invalid id";
 
-  const isExist = document.getElementById(`call-${msgId}`);
+  const isExist = document.getElementById(`call-${callId}`);
   if (isExist) throw "message element is already created";
 
   // Initialize the call timer.
-  globalThis.notification[`call-${msgId}`] = Date.now();
+  globalThis.notification[`call-${callId}`] = Date.now();
 
-  // Create the message element.
+  // Create the call element.
   const toast = document.getElementById("notificationContainer");
-  const msgDiv = document.createElement("div");
-  msgDiv.id = `call-${msgId}`;
-  msgDiv.textContent = `${data?.callee} - ${i}`;
-  toast.appendChild(msgDiv);
-  i = i + 1;
+  const callDiv = document.createElement("div");
+  callDiv.id = `call-${callId}`;
+  callDiv.textContent = `${data?.caller_name} is calling`;
+  toast.appendChild(callDiv);
+
+  // Subscribe to the call channel.
+  subscribeToCall(callId);
 
   // Trigger the remove job which will delete UI elements if it doesn't ring
   // anymore.
   setTimeout(() => {
-    removeCall(msgId, msgDiv);
+    removeCall(callId, callDiv);
   }, 1000);
 }
 
 // -----------------------------------------------------------------------------
-// onMessage
+// onNotification
 // -----------------------------------------------------------------------------
-function onMessage(e) {
+function onNotification(e) {
   try {
     const data = JSON.parse(e.data);
 
@@ -95,16 +122,16 @@ function onMessage(e) {
 // -----------------------------------------------------------------------------
 // subscribe
 // -----------------------------------------------------------------------------
-function subscribe(user) {
-  const src = `http://127.0.0.1:8001/intercom/notification?user=${user}`;
+function subscribeToNotification(user) {
+  const src = `${STREAM_SERVER}/intercom/notification?user=${user}`;
   const eventSrc = new EventSource(src);
 
   eventSrc.onmessage = (e) => {
-    onMessage(e);
+    onNotification(e);
   };
 
   eventSrc.onerror = () => {
-    console.error("eventSrc failed.");
+    console.error("notification channel failed.");
   };
 }
 
@@ -121,4 +148,4 @@ createNotificationContainer();
 const user = getUser();
 
 // Subscribe to the notification channel.
-subscribe(user);
+subscribeToNotification(user);

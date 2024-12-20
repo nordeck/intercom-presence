@@ -137,6 +137,28 @@ function createStream(channel: string): ReadableStream {
 }
 
 // -----------------------------------------------------------------------------
+// call
+// -----------------------------------------------------------------------------
+function call(req: Request): Response {
+  const url = new URL(req.url);
+  const qs = new URLSearchParams(url.search);
+  const callId = qs.get("id");
+  if (!callId) return unauthorized();
+
+  const channel = `call-${callId}`;
+  const stream = createStream(channel);
+
+  const headers = {
+    "Content-Type": "text/event-stream",
+    "Cache-Control": "no-cache",
+    "Connection": "keep-alive",
+  } as Headers;
+  if (CORS_ORIGIN) headers["Access-Control-Allow-Origin"] = CORS_ORIGIN;
+
+  return new Response(stream, { headers });
+}
+
+// -----------------------------------------------------------------------------
 // notification
 // -----------------------------------------------------------------------------
 async function notification(req: Request): Promise<Response> {
@@ -167,7 +189,9 @@ async function handler(req: Request): Promise<Response> {
   const url = new URL(req.url);
   const path = url.pathname;
 
-  if (path === `${PRE}/notification`) {
+  if (path === `${PRE}/call`) {
+    return call(req);
+  } else if (path === `${PRE}/notification`) {
     return await notification(req);
   } else {
     return notFound();
