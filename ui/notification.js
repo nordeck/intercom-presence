@@ -23,14 +23,20 @@ function createNotificationContainer() {
 }
 
 // -----------------------------------------------------------------------------
-// onCall
+// onCallMessage
 // -----------------------------------------------------------------------------
-function onCall(callId, e) {
+function onCallMessage(callId, e) {
   try {
     const data = JSON.parse(e.data);
-    console.error(data);
+    if (!data) throw "missing call data";
 
-    globalThis.notification[`call-${callId}`] = Date.now();
+    if (data.type === "ring") {
+      // Extend the expire time.
+      globalThis.notification[`call-${callId}`] = Date.now();
+    } else if (data.type === "stop") {
+      // Set timer as expired. So, the popup will be removed.
+      globalThis.notification[`call-${callId}`] = "0";
+    }
   } catch {
     // do nothing
   }
@@ -44,11 +50,11 @@ function subscribeToCall(callId) {
   const eventSrc = new EventSource(src);
 
   eventSrc.onmessage = (e) => {
-    onCall(callId, e);
+    onCallMessage(callId, e);
   };
 
   eventSrc.onerror = () => {
-    console.error("notification channel failed.");
+    console.error("call channel failed.");
   };
 }
 
@@ -81,8 +87,8 @@ function callHandler(data) {
   const callId = data?.call_id;
   if (!callId) throw "invalid id";
 
-  const isExist = document.getElementById(`call-${callId}`);
-  if (isExist) throw "message element is already created";
+  const isDivExist = document.getElementById(`call-${callId}`);
+  if (isDivExist) throw "message element is already created";
 
   // Initialize the call timer.
   globalThis.notification[`call-${callId}`] = Date.now();
@@ -105,11 +111,12 @@ function callHandler(data) {
 }
 
 // -----------------------------------------------------------------------------
-// onNotification
+// onNotificationMessage
 // -----------------------------------------------------------------------------
-function onNotification(e) {
+function onNotificationMessage(e) {
   try {
     const data = JSON.parse(e.data);
+    if (!data) throw "invalid notification data";
 
     if (data?.type === "call") {
       callHandler(data);
@@ -117,7 +124,7 @@ function onNotification(e) {
       throw "unknown notification type";
     }
   } catch {
-    // do nothing
+    console.error("failed while processing the notification");
   }
 }
 
@@ -129,7 +136,7 @@ function subscribeToNotification(user) {
   const eventSrc = new EventSource(src);
 
   eventSrc.onmessage = (e) => {
-    onNotification(e);
+    onNotificationMessage(e);
   };
 
   eventSrc.onerror = () => {

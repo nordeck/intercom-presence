@@ -75,11 +75,11 @@ export function unauthorized(): Response {
 }
 
 // -----------------------------------------------------------------------------
-// notifyCall
+// publishNotification
 // -----------------------------------------------------------------------------
-async function notifyCall(userUUID: string, jsonMsg: string) {
+async function publishNotification(userUUID: string, notification: string) {
   const nc = await connect(NATS_SERVERS) as NatsConnection;
-  nc.publish(`notification.${userUUID}`, jsonMsg);
+  nc.publish(`notification.${userUUID}`, notification);
   nc.drain();
 }
 
@@ -104,29 +104,29 @@ async function addCall(req: Request): Promise<Response> {
   const headers = {} as Headers;
   if (CORS_ORIGIN) headers["Access-Control-Allow-Origin"] = CORS_ORIGIN;
 
-  const body = {
+  const data = {
     "type": "call",
     "call_id": callId,
     "call_url": callUrl,
     "caller_id": callerId,
     "caller_name": callerName,
   };
-  const jsonBody = JSON.stringify(body);
+  const notification = JSON.stringify(data);
 
-  await notifyCall(calleeUUID, jsonBody);
+  await publishNotification(calleeUUID, notification);
 
-  return new Response(jsonBody, {
+  return new Response(notification, {
     status: 200,
     headers,
   });
 }
 
 // -----------------------------------------------------------------------------
-// ring
+// publishCallAction
 // -----------------------------------------------------------------------------
-async function ring(callId: string, jsonMsg: string) {
+async function publishCallAction(callId: string, action: string) {
   const nc = await connect(NATS_SERVERS) as NatsConnection;
-  nc.publish(`call.${callId}`, jsonMsg);
+  nc.publish(`call.${callId}`, action);
   nc.drain();
 }
 
@@ -142,14 +142,39 @@ async function ringCall(req: Request): Promise<Response> {
   const headers = {} as Headers;
   if (CORS_ORIGIN) headers["Access-Control-Allow-Origin"] = CORS_ORIGIN;
 
-  const body = {
+  const data = {
     "type": "ring",
   };
-  const jsonBody = JSON.stringify(body);
+  const action = JSON.stringify(data);
 
-  await ring(callId, jsonBody);
+  await publishCallAction(callId, action);
 
-  return new Response(jsonBody, {
+  return new Response(action, {
+    status: 200,
+    headers,
+  });
+}
+
+// -----------------------------------------------------------------------------
+// stopCall
+// -----------------------------------------------------------------------------
+async function stopCall(req: Request): Promise<Response> {
+  const pl = await req.json();
+  const callId = pl.call_id;
+
+  if (!callId) return unauthorized();
+
+  const headers = {} as Headers;
+  if (CORS_ORIGIN) headers["Access-Control-Allow-Origin"] = CORS_ORIGIN;
+
+  const data = {
+    "type": "stop",
+  };
+  const action = JSON.stringify(data);
+
+  await publishCallAction(callId, action);
+
+  return new Response(action, {
     status: 200,
     headers,
   });
@@ -163,6 +188,8 @@ async function call(req: Request, path: string): Promise<Response> {
     return await addCall(req);
   } else if (path === `${PRE}/call/ring`) {
     return await ringCall(req);
+  } else if (path === `${PRE}/call/stop`) {
+    return await stopCall(req);
   } else {
     return notFound();
   }
