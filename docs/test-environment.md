@@ -22,7 +22,7 @@ The following components will be on the local environment:
 - https://myics.nightly.opendesk.qa
 
 These will be behind an Nginx proxy. So, create local DNS records for them which
-point the reverse proxy. For example:
+point to the reverse proxy. For example:
 
 - myapp.nightly.opendesk.qa -> 172.18.18.40
 - myics.nightly.opendesk.qa -> 172.18.18.40
