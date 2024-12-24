@@ -39,12 +39,12 @@ In this directory:
 deno --allow-net presence.ts
 ```
 
-## Stream service
+## Intercom service
 
 In this directory:
 
 ```bash
-deno --allow-net stream.ts
+deno --allow-net intercom.ts
 ```
 
 ## NATS CLI
@@ -124,7 +124,7 @@ nats -s "127.0.0.1" req presence.online "" | jq .
 
 ## Testing (notification stream)
 
-Use scripts in [tools](tools).
+Use scripts in [UI](ui).
 
 ## Links
 

@@ -17,6 +17,17 @@ interface Headers {
   [key: string]: string;
 }
 
+const STREAM_HEADERS = {
+  "Content-Type": "text/event-stream",
+  "Cache-Control": "no-cache",
+  "Connection": "keep-alive",
+  "Access-Control-Allow-Credentials": "true",
+} as Headers;
+
+const ACTION_HEADERS = {
+  "Access-Control-Allow-Credentials": "true",
+} as Headers;
+
 // -----------------------------------------------------------------------------
 // internalServerError
 // -----------------------------------------------------------------------------
@@ -203,15 +214,9 @@ function callStream(req: Request): Response {
   const callId = qs.get("id");
   if (!callId) return unauthorized();
 
+  const headers = STREAM_HEADERS;
   const channel = `call.${callId}`;
   const stream = createStream(channel);
-
-  const headers = {
-    "Content-Type": "text/event-stream",
-    "Cache-Control": "no-cache",
-    "Connection": "keep-alive",
-    "Access-Control-Allow-Credentials": "true",
-  } as Headers;
 
   return new Response(stream, { headers });
 }
@@ -220,15 +225,9 @@ function callStream(req: Request): Response {
 // notificationStream
 // -----------------------------------------------------------------------------
 async function notificationStream(identity: string): Promise<Response> {
+  const headers = STREAM_HEADERS;
   const channel = await getChannel(identity);
   const stream = createStream(channel);
-
-  const headers = {
-    "Content-Type": "text/event-stream",
-    "Cache-Control": "no-cache",
-    "Connection": "keep-alive",
-    "Access-Control-Allow-Credentials": "true",
-  } as Headers;
 
   return new Response(stream, { headers });
 }
@@ -249,6 +248,7 @@ async function addCall(req: Request, identity: string): Promise<Response> {
   const callId = await uuid.generate(UUID_NAMESPACE, encodedCallId);
   const callUrl = `${MEETING_SERVER}/${callId}`;
 
+  const headers = ACTION_HEADERS;
   const data = {
     "type": "call",
     "call_id": callId,
@@ -262,6 +262,7 @@ async function addCall(req: Request, identity: string): Promise<Response> {
 
   return new Response(notification, {
     status: 200,
+    headers,
   });
 }
 
@@ -274,6 +275,7 @@ async function ringCall(req: Request): Promise<Response> {
 
   if (!callId) return unauthorized();
 
+  const headers = ACTION_HEADERS;
   const data = {
     "type": "ring",
   };
@@ -283,6 +285,7 @@ async function ringCall(req: Request): Promise<Response> {
 
   return new Response(action, {
     status: 200,
+    headers,
   });
 }
 
@@ -295,6 +298,7 @@ async function stopCall(req: Request): Promise<Response> {
 
   if (!callId) return unauthorized();
 
+  const headers = ACTION_HEADERS;
   const data = {
     "type": "stop",
   };
@@ -304,6 +308,7 @@ async function stopCall(req: Request): Promise<Response> {
 
   return new Response(action, {
     status: 200,
+    headers,
   });
 }
 
