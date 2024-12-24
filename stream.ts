@@ -5,12 +5,12 @@ import type { NatsConnection } from "jsr:@nats-io/nats-core@3.0.0-46";
 // -----------------------------------------------------------------------------
 // Globals
 // -----------------------------------------------------------------------------
+const ICS_SERVER = "https://ics.nightly.opendesk.qa";
 const NATS_SERVERS = { servers: "127.0.0.1:4222" };
 const HTTP_HOSTNAME = "0.0.0.0";
 const HTTP_PORT = 8001;
 const PRE = "/intercom";
 const UUID_NAMESPACE = "6ba7b810-9dad-11d1-80b4-00c04fd430c8";
-const CORS_ORIGIN = "*";
 
 interface Headers {
   [key: string]: string;
@@ -26,12 +26,8 @@ export function methodNotAllowed(): Response {
     },
   };
 
-  const headers = {} as Headers;
-  if (CORS_ORIGIN) headers["Access-Control-Allow-Origin"] = CORS_ORIGIN;
-
   return new Response(JSON.stringify(body), {
     status: 405,
-    headers,
   });
 }
 
@@ -45,12 +41,8 @@ export function notFound(): Response {
     },
   };
 
-  const headers = {} as Headers;
-  if (CORS_ORIGIN) headers["Access-Control-Allow-Origin"] = CORS_ORIGIN;
-
   return new Response(JSON.stringify(body), {
     status: 404,
-    headers,
   });
 }
 
@@ -64,39 +56,49 @@ export function unauthorized(): Response {
     },
   };
 
-  const headers = {} as Headers;
-  if (CORS_ORIGIN) headers["Access-Control-Allow-Origin"] = CORS_ORIGIN;
-
   return new Response(JSON.stringify(body), {
     status: 401,
-    headers,
   });
 }
 
 // -----------------------------------------------------------------------------
-// getChannel
-//
-// It returns the hardcoded pub channel for now. Auth checking will be added.
+// getIdentity
 // -----------------------------------------------------------------------------
-async function getChannel(req: Request): Promise<string> {
-  const url = new URL(req.url);
-  const qs = new URLSearchParams(url.search);
-  const user = qs.get("user");
-  if (!user) throw "no user";
+async function getIdentity(req: Request): Promise<string> {
+  try {
+    const cookie = req.headers.get("cookie");
+    if (!cookie) throw "missing authentication cookie";
+
+    const url = `${ICS_SERVER}/uuid`;
+    const res = await fetch(url, {
+      headers: {
+        Accept: "application/json",
+        Cookie: cookie,
+      },
+    });
+
+    if (res.status !== 200) throw "uuid request is rejected";
+
+    const identity = await res.text();
+    if (!identity) throw "missing user uuid";
+
+    return identity;
+  } catch {
+    return undefined;
+  }
+}
+
+// -----------------------------------------------------------------------------
+// getChannel
+// -----------------------------------------------------------------------------
+async function getChannel(identity: string): Promise<string> {
+  if (!identity) throw "no identity";
 
   const encoder = new TextEncoder();
+  const encoded = encoder.encode(identity);
+  const identityUuid = await uuid.generate(UUID_NAMESPACE, encoded);
 
-  if (user === "user1") {
-    const id = encoder.encode("f:d704f61d-fade-4641-b03a-1f211206c5b6:user1");
-    const userUuid = await uuid.generate(UUID_NAMESPACE, id);
-    return `notification.${userUuid}`;
-  } else if (user === "user2") {
-    const id = encoder.encode("f:d704f61d-fade-4641-b03a-1f211206c5b6:user2");
-    const userUuid = await uuid.generate(UUID_NAMESPACE, id);
-    return `notification.${userUuid}`;
-  } else {
-    throw "invalid user";
-  }
+  return `notification.${identityUuid}`;
 }
 
 // -----------------------------------------------------------------------------
@@ -152,8 +154,8 @@ function call(req: Request): Response {
     "Content-Type": "text/event-stream",
     "Cache-Control": "no-cache",
     "Connection": "keep-alive",
+    "Access-Control-Allow-Credentials": "true",
   } as Headers;
-  if (CORS_ORIGIN) headers["Access-Control-Allow-Origin"] = CORS_ORIGIN;
 
   return new Response(stream, { headers });
 }
@@ -161,18 +163,16 @@ function call(req: Request): Response {
 // -----------------------------------------------------------------------------
 // notification
 // -----------------------------------------------------------------------------
-async function notification(req: Request): Promise<Response> {
-  const channel = await getChannel(req);
-  if (!channel) return unauthorized();
-
+async function notification(req: Request, identity: string): Promise<Response> {
+  const channel = await getChannel(identity);
   const stream = createStream(channel);
 
   const headers = {
     "Content-Type": "text/event-stream",
     "Cache-Control": "no-cache",
     "Connection": "keep-alive",
+    "Access-Control-Allow-Credentials": "true",
   } as Headers;
-  if (CORS_ORIGIN) headers["Access-Control-Allow-Origin"] = CORS_ORIGIN;
 
   return new Response(stream, { headers });
 }
@@ -186,13 +186,17 @@ async function handler(req: Request): Promise<Response> {
     return methodNotAllowed();
   }
 
+  // Check identity.
+  const identity = await getIdentity(req);
+  if (!identity) return unauthorized();
+
   const url = new URL(req.url);
   const path = url.pathname;
 
   if (path === `${PRE}/call`) {
     return call(req);
   } else if (path === `${PRE}/notification`) {
-    return await notification(req);
+    return await notification(req, identity);
   } else {
     return notFound();
   }
