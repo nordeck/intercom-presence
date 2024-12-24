@@ -46,33 +46,28 @@ function subscribeToCall(callId) {
 
   eventSrc.onmessage = (e) => {
     onCallMessage(callId, e);
-
-    // Close the subscription if the call is ended.
-    if (
-      !globalThis.notification[`call-${callId}`] ||
-      globalThis.notification[`call-${callId}`] == "0"
-    ) {
-      eventSrc.close();
-    }
   };
 
   eventSrc.onerror = () => {
     console.error("call channel failed.");
   };
+
+  return eventSrc;
 }
 
 // -----------------------------------------------------------------------------
 // removeCall
 // -----------------------------------------------------------------------------
-function removeCall(callId, callDiv) {
+function removeCall(callId, callDiv, callEventSrc) {
   if (!callId) throw "invalid call id";
   if (!callDiv) throw "missing call div";
+  if (!callEventSrc) throw "missing call event source";
   if (!globalThis.notification[`call-${callId}`]) throw "missing call timer";
 
   // If it is still ringing then check later.
   if (Number(globalThis.notification[`call-${callId}`]) > Date.now() - 3000) {
     setTimeout(() => {
-      removeCall(callId, callDiv);
+      removeCall(callId, callDiv, callEventSrc);
     }, 1000);
 
     return;
@@ -81,6 +76,7 @@ function removeCall(callId, callDiv) {
   // Remove objects of this call since it doesn't ring anymore.
   delete globalThis.notification[`call-${callId}`];
   callDiv.remove();
+  callEventSrc.close();
 }
 
 // -----------------------------------------------------------------------------
@@ -104,12 +100,12 @@ function callHandler(data) {
   toast.appendChild(callDiv);
 
   // Subscribe to the call channel.
-  subscribeToCall(callId);
+  const callEventSrc = subscribeToCall(callId);
 
   // Trigger the remove job which will delete UI elements if it doesn't ring
   // anymore.
   setTimeout(() => {
-    removeCall(callId, callDiv);
+    removeCall(callId, callDiv, callEventSrc);
   }, 1000);
 }
 
