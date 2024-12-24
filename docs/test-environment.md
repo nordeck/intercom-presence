@@ -94,7 +94,7 @@ server {
 }
 ```
 
-This is a proxy for [Stream server](../stream.ts) and for openDesk's ICS.
+This is a proxy for [Intercom service](../intercom.ts) and for openDesk's ICS.
 
 ## NATS server
 
@@ -104,18 +104,10 @@ Start the NATS server in the local host:
 nats-server
 ```
 
-## Stream server
+## Intercom service
 
-Start the stream server in the local host:
-
-```bash
-deno run --allow-net --unsafely-ignore-certificate-errors --watch stream.ts
-```
-
-## Message server
-
-Start the message server in the local host:
+Start the intercom service in the local host:
 
 ```bash
-deno run --allow-net --watch message.ts
+deno run --allow-net --unsafely-ignore-certificate-errors --watch intercom.ts
 ```
