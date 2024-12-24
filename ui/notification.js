@@ -1,4 +1,4 @@
-STREAM_SERVER = "https://myics.nightly.opendesk.qa";
+STREAM_SERVER = "https://ics.nightly.opendesk.qa";
 
 // -----------------------------------------------------------------------------
 // getUser
@@ -149,7 +149,7 @@ function subscribeToNotification() {
   }
 
   const src = `${STREAM_SERVER}/intercom/notification?user=${user}`;
-  const eventSrc = new EventSource(src);
+  const eventSrc = new EventSource(src, { withCredentials: true });
 
   eventSrc.onmessage = (e) => {
     onNotificationMessage(e);
