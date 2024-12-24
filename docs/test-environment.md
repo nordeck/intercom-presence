@@ -9,8 +9,8 @@ The following components will be on the nightly deployment. So, there is nothing
 to do for them in the local environment:
 
 - https://portal.nightly.opendesk.qa
-- https://ics.nightly.opendesk.qa
 - https://id.nightly.opendesk.qa
+- https://ics.nightly.opendesk.qa (_this will be behind a local reverse proxy_)
 
 Log in as `Administrator` and create a test user.
 
@@ -19,13 +19,13 @@ Log in as `Administrator` and create a test user.
 The following components will be on the local environment:
 
 - https://myapp.nightly.opendesk.qa
-- https://myics.nightly.opendesk.qa
+- https://ics.nightly.opendesk.qa (_as reverse proxy_)
 
 These will be behind an Nginx proxy. So, create local DNS records for them which
 point to the reverse proxy. For example:
 
 - myapp.nightly.opendesk.qa -> 172.18.18.40
-- myics.nightly.opendesk.qa -> 172.18.18.40
+- ics.nightly.opendesk.qa -> 172.18.18.40
 
 ## Sample Nginx config
 
@@ -51,7 +51,7 @@ server {
 
 `/var/www/myapp` folder contains files which are in [ui](../ui).
 
-### myics.nightly.opendesk.qa
+### ics.nightly.opendesk.qa
 
 ```config
 server {
@@ -59,9 +59,9 @@ server {
   listen [::]:443 ssl;
 
   include snippets/snakeoil.conf;
-  server_name myics.nightly.opendesk.qa;
+  server_name ics.nightly.opendesk.qa;
 
-  location / {
+  location /intercom/ {
     proxy_pass http://172.18.18.1:8001;
     proxy_http_version 1.1;
     proxy_set_header Host $http_host;
@@ -77,10 +77,18 @@ server {
     proxy_send_timeout 3600s;
     keepalive_timeout 3600s;
   }
+
+  location / {
+    proxy_pass https://<IP_ADDRESS_OF_NIGHTLY>;
+    proxy_http_version 1.1;
+    proxy_set_header Host $http_host;
+    proxy_set_header X-Real-IP $remote_addr;
+    proxy_set_header X-Forwarded-For $remote_addr;
+  }
 }
 ```
 
-This is a proxy for [Stream server](../stream.ts).
+This is a proxy for [Stream server](../stream.ts) and for openDesk's ICS.
 
 ## NATS server
 
@@ -95,7 +103,7 @@ nats-server
 Start the stream server in the local host:
 
 ```bash
-deno run --allow-net --watch stream.ts
+deno run --allow-net --unsafely-ignore-certificate-errors --watch stream.ts
 ```
 
 ## Message server
