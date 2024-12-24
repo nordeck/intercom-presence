@@ -80,6 +80,8 @@ server {
     proxy_read_timeout 3600s;
     proxy_send_timeout 3600s;
     keepalive_timeout 3600s;
+
+    add_header "Access-Control-Allow-Origin" $http_origin;
   }
 
   location / {
