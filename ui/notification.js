@@ -1,11 +1,5 @@
-STREAM_SERVER = "https://ics.nightly.opendesk.qa";
-
-// -----------------------------------------------------------------------------
-// getUser
-// -----------------------------------------------------------------------------
-function getUser() {
-  return globalThis.notification.user;
-}
+const ICS_SERVER = "https://ics.nightly.opendesk.qa";
+const STREAM_SERVER = "https://ics.nightly.opendesk.qa";
 
 // -----------------------------------------------------------------------------
 // createNotificationContainer
@@ -120,6 +114,30 @@ function callHandler(data) {
 }
 
 // -----------------------------------------------------------------------------
+// getIdentity
+// -----------------------------------------------------------------------------
+async function getIdentity() {
+  try {
+    const url = `${ICS_SERVER}/uuid`;
+    const res = await fetch(url, {
+      credentials: "include",
+      headers: {
+        Accept: "application/json",
+      },
+    });
+
+    if (res.status !== 200) throw "identity request is rejected";
+
+    const identity = await res.text();
+    if (!identity) throw "missing identity";
+
+    return identity;
+  } catch {
+    return undefined;
+  }
+}
+
+// -----------------------------------------------------------------------------
 // onNotificationMessage
 // -----------------------------------------------------------------------------
 function onNotificationMessage(e) {
@@ -140,15 +158,15 @@ function onNotificationMessage(e) {
 // -----------------------------------------------------------------------------
 // subscribe
 // -----------------------------------------------------------------------------
-function subscribeToNotification() {
-  // This will be Keycloak's token in the future.
-  const user = getUser();
-  if (!user) {
+async function subscribeToNotification() {
+  // Dont subscribe now if she is not authenticated yet. Try later.
+  const isAuthenticated = await getIdentity();
+  if (!isAuthenticated) {
     setTimeout(subscribeToNotification, 3000);
     return;
   }
 
-  const src = `${STREAM_SERVER}/intercom/notification?user=${user}`;
+  const src = `${STREAM_SERVER}/intercom/notification`;
   const eventSrc = new EventSource(src, { withCredentials: true });
 
   eventSrc.onmessage = (e) => {
