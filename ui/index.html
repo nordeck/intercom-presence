@@ -15,7 +15,7 @@
 
       <form
         id="callForm"
-        action="http://127.0.0.1:8002/intercom/call/add"
+        action="https://ics.nightly.opendesk.qa/intercom/call/add"
         method="POST"
       >
         <label
@@ -66,10 +66,10 @@
 
         try {
           const res = await fetch(form.action, {
+            credentials: "include",
             headers: {
               Accept: "application/json",
             },
-            mode: "cors",
             method: "post",
             body: JSON.stringify(payload),
           });
