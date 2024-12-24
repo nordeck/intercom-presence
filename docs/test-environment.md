@@ -5,8 +5,8 @@ the nightly deployment.
 
 ## Components from nightly deployment
 
-The following applications/services will work on the nightly deployment. So,
-there is nothing to do for them in the local environment:
+The following components will be on the nightly deployment. So, there is nothing
+to do for them in the local environment:
 
 - https://portal.nightly.opendesk.qa
 - https://ics.nightly.opendesk.qa
@@ -14,9 +14,9 @@ there is nothing to do for them in the local environment:
 
 Log in as `Administrator` and create a test user.
 
-## Local portal components
+## Local components
 
-The following applications/services will work on the local environment:
+The following components will be on the local environment:
 
 - https://myapp.nightly.opendesk.qa
 - https://myics.nightly.opendesk.qa
@@ -51,7 +51,6 @@ server {
 
 `/var/www/myapp` folder contains files which are in [ui](../ui).
 
-
 ### myics.nightly.opendesk.qa
 
 ```config
@@ -82,3 +81,27 @@ server {
 ```
 
 This is a proxy for [Stream server](../stream.ts).
+
+## NATS server
+
+Start the NATS server in the local host:
+
+```bash
+nats-server
+```
+
+## Stream server
+
+Start the stream server in the local host:
+
+```bash
+deno run --allow-net --watch stream.ts
+```
+
+## Message server
+
+Start the message server in the local host:
+
+```bash
+deno run --allow-net --watch message.ts
+```
