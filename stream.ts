@@ -84,7 +84,7 @@ async function getIdentity(req: Request): Promise<string> {
 
     return identity;
   } catch {
-    return undefined;
+    return "";
   }
 }
 
@@ -163,7 +163,7 @@ function call(req: Request): Response {
 // -----------------------------------------------------------------------------
 // notification
 // -----------------------------------------------------------------------------
-async function notification(req: Request, identity: string): Promise<Response> {
+async function notification(identity: string): Promise<Response> {
   const channel = await getChannel(identity);
   const stream = createStream(channel);
 
@@ -196,7 +196,7 @@ async function handler(req: Request): Promise<Response> {
   if (path === `${PRE}/call`) {
     return call(req);
   } else if (path === `${PRE}/notification`) {
-    return await notification(req, identity);
+    return await notification(identity);
   } else {
     return notFound();
   }
