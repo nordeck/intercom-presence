@@ -42,7 +42,7 @@ function onCallMessage(callId, e) {
 // -----------------------------------------------------------------------------
 function subscribeToCall(callId) {
   const src = `${STREAM_SERVER}/intercom/call?id=${callId}`;
-  const eventSrc = new EventSource(src);
+  const eventSrc = new EventSource(src, { withCredentials: true });
 
   eventSrc.onmessage = (e) => {
     onCallMessage(callId, e);
