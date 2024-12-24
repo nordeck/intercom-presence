@@ -1,4 +1,4 @@
-STREAM_SERVER = "http://127.0.0.1:8001";
+STREAM_SERVER = "https://myics.nightly.opendesk.qa";
 
 // -----------------------------------------------------------------------------
 // getUser
@@ -34,7 +34,8 @@ function onCallMessage(callId, e) {
       // Extend the expire time.
       globalThis.notification[`call-${callId}`] = Date.now();
     } else if (data.type === "stop") {
-      // Set timer as expired. So, the popup will be removed.
+      // Set timer as expired. So, the popup and the subscription will be
+      // removed.
       globalThis.notification[`call-${callId}`] = "0";
     }
   } catch {
@@ -51,6 +52,14 @@ function subscribeToCall(callId) {
 
   eventSrc.onmessage = (e) => {
     onCallMessage(callId, e);
+
+    // Close the subscription if the call is ended.
+    if (
+      !globalThis.notification[`call-${callId}`] ||
+      globalThis.notification[`call-${callId}`] == "0"
+    ) {
+      eventSrc.close();
+    }
   };
 
   eventSrc.onerror = () => {
@@ -66,7 +75,7 @@ function removeCall(callId, callDiv) {
   if (!callDiv) throw "missing call div";
   if (!globalThis.notification[`call-${callId}`]) throw "missing call timer";
 
-  // Check later if it is still ringing.
+  // If it is still ringing then check later.
   if (Number(globalThis.notification[`call-${callId}`]) > Date.now() - 3000) {
     setTimeout(() => {
       removeCall(callId, callDiv);
@@ -75,7 +84,7 @@ function removeCall(callId, callDiv) {
     return;
   }
 
-  // Remove objects of this call.
+  // Remove objects of this call since it doesn't ring anymore.
   delete globalThis.notification[`call-${callId}`];
   callDiv.remove();
 }
@@ -131,7 +140,14 @@ function onNotificationMessage(e) {
 // -----------------------------------------------------------------------------
 // subscribe
 // -----------------------------------------------------------------------------
-function subscribeToNotification(user) {
+function subscribeToNotification() {
+  // This will be Keycloak's token in the future.
+  const user = getUser();
+  if (!user) {
+    setTimeout(subscribeToNotification, 3000);
+    return;
+  }
+
   const src = `${STREAM_SERVER}/intercom/notification?user=${user}`;
   const eventSrc = new EventSource(src);
 
@@ -153,8 +169,5 @@ globalThis.notification = globalThis.notification || {};
 // Create the notification container in UI
 createNotificationContainer();
 
-// This will be Keycloak's token in the future.
-const user = getUser();
-
 // Subscribe to the notification channel.
-subscribeToNotification(user);
+subscribeToNotification();
