@@ -1,4 +1,4 @@
-import { v5 as uuid } from "jsr:@std/uuid@^1.0.0";
+import { v1, v5 as uuid } from "jsr:@std/uuid@^1.0.0";
 import { connect } from "jsr:@nats-io/transport-deno@3.0.0-18";
 import type { NatsConnection } from "jsr:@nats-io/nats-core@3.0.0-46";
 
@@ -6,14 +6,30 @@ import type { NatsConnection } from "jsr:@nats-io/nats-core@3.0.0-46";
 // Globals
 // -----------------------------------------------------------------------------
 const ICS_SERVER = "https://ics.nightly.opendesk.qa";
-const NATS_SERVERS = { servers: "127.0.0.1:4222" };
 const HTTP_HOSTNAME = "0.0.0.0";
 const HTTP_PORT = 8001;
+const NATS_SERVERS = { servers: "127.0.0.1:4222" };
+const MEETING_SERVER = "https://meet.jit.si";
 const PRE = "/intercom";
 const UUID_NAMESPACE = "6ba7b810-9dad-11d1-80b4-00c04fd430c8";
 
 interface Headers {
   [key: string]: string;
+}
+
+// -----------------------------------------------------------------------------
+// internalServerError
+// -----------------------------------------------------------------------------
+export function internalServerError(): Response {
+  const body = {
+    error: {
+      message: "Internal Server Error",
+    },
+  };
+
+  return new Response(JSON.stringify(body), {
+    status: 500,
+  });
 }
 
 // -----------------------------------------------------------------------------
@@ -43,6 +59,24 @@ export function notFound(): Response {
 
   return new Response(JSON.stringify(body), {
     status: 404,
+  });
+}
+
+// -----------------------------------------------------------------------------
+// ok
+// -----------------------------------------------------------------------------
+export function ok(body: string): Response {
+  return new Response(body, {
+    status: 200,
+  });
+}
+
+// -----------------------------------------------------------------------------
+// succeeded ((NoContent, OK without a body)
+// -----------------------------------------------------------------------------
+export function succeeded(): Response {
+  return new Response(null, {
+    status: 204,
   });
 }
 
@@ -96,9 +130,31 @@ async function getChannel(identity: string): Promise<string> {
 
   const encoder = new TextEncoder();
   const encoded = encoder.encode(identity);
-  const identityUuid = await uuid.generate(UUID_NAMESPACE, encoded);
+  const identityUUID = await uuid.generate(UUID_NAMESPACE, encoded);
 
-  return `notification.${identityUuid}`;
+  return `notification.${identityUUID}`;
+}
+
+// -----------------------------------------------------------------------------
+// publishNotification
+// -----------------------------------------------------------------------------
+async function publishNotification(identityUUID: string, notification: string) {
+  if (!identityUUID) throw "no identity uuid";
+
+  const nc = await connect(NATS_SERVERS) as NatsConnection;
+  nc.publish(`notification.${identityUUID}`, notification);
+  nc.drain();
+}
+
+// -----------------------------------------------------------------------------
+// publishCallAction
+// -----------------------------------------------------------------------------
+async function publishCallAction(callId: string, action: string) {
+  if (!callId) throw "no call id";
+
+  const nc = await connect(NATS_SERVERS) as NatsConnection;
+  nc.publish(`call.${callId}`, action);
+  nc.drain();
 }
 
 // -----------------------------------------------------------------------------
@@ -123,8 +179,8 @@ function createStream(channel: string): ReadableStream {
           const msg = m.string();
           if (!msg) throw "invalid pub message";
 
-          const eventData = encoder.encode(`data: ${msg}\n\n`);
-          controller.enqueue(eventData);
+          const encodedData = encoder.encode(`data: ${msg}\n\n`);
+          controller.enqueue(encodedData);
         } catch (e) {
           console.error(e);
         }
@@ -139,9 +195,9 @@ function createStream(channel: string): ReadableStream {
 }
 
 // -----------------------------------------------------------------------------
-// call
+// callStream
 // -----------------------------------------------------------------------------
-function call(req: Request): Response {
+function callStream(req: Request): Response {
   const url = new URL(req.url);
   const qs = new URLSearchParams(url.search);
   const callId = qs.get("id");
@@ -161,9 +217,9 @@ function call(req: Request): Response {
 }
 
 // -----------------------------------------------------------------------------
-// notification
+// notificationStream
 // -----------------------------------------------------------------------------
-async function notification(identity: string): Promise<Response> {
+async function notificationStream(identity: string): Promise<Response> {
   const channel = await getChannel(identity);
   const stream = createStream(channel);
 
@@ -178,34 +234,124 @@ async function notification(identity: string): Promise<Response> {
 }
 
 // -----------------------------------------------------------------------------
+// addCall
+// -----------------------------------------------------------------------------
+async function addCall(req: Request, identity: string): Promise<Response> {
+  if (!identity) return unauthorized();
+
+  const pl = await req.json();
+  const calleeId = pl.callee_id;
+
+  const encoder = new TextEncoder();
+  const encodedCalleeId = encoder.encode(calleeId);
+  const calleeUUID = await uuid.generate(UUID_NAMESPACE, encodedCalleeId);
+  const encodedCallId = encoder.encode(v1.generate());
+  const callId = await uuid.generate(UUID_NAMESPACE, encodedCallId);
+  const callUrl = `${MEETING_SERVER}/${callId}`;
+
+  const data = {
+    "type": "call",
+    "call_id": callId,
+    "call_url": callUrl,
+    "caller_id": identity,
+    "caller_name": identity,
+  };
+  const notification = JSON.stringify(data);
+
+  await publishNotification(calleeUUID, notification);
+
+  return new Response(notification, {
+    status: 200,
+  });
+}
+
+// -----------------------------------------------------------------------------
+// ringCall
+// -----------------------------------------------------------------------------
+async function ringCall(req: Request): Promise<Response> {
+  const pl = await req.json();
+  const callId = pl.call_id;
+
+  if (!callId) return unauthorized();
+
+  const data = {
+    "type": "ring",
+  };
+  const action = JSON.stringify(data);
+
+  await publishCallAction(callId, action);
+
+  return new Response(action, {
+    status: 200,
+  });
+}
+
+// -----------------------------------------------------------------------------
+// stopCall
+// -----------------------------------------------------------------------------
+async function stopCall(req: Request): Promise<Response> {
+  const pl = await req.json();
+  const callId = pl.call_id;
+
+  if (!callId) return unauthorized();
+
+  const data = {
+    "type": "stop",
+  };
+  const action = JSON.stringify(data);
+
+  await publishCallAction(callId, action);
+
+  return new Response(action, {
+    status: 200,
+  });
+}
+
+// -----------------------------------------------------------------------------
 // handler
 // -----------------------------------------------------------------------------
 async function handler(req: Request): Promise<Response> {
-  // check method
-  if (req.method !== "GET") {
-    return methodNotAllowed();
-  }
-
-  // Check identity.
-  const identity = await getIdentity(req);
-  if (!identity) return unauthorized();
-
   const url = new URL(req.url);
   const path = url.pathname;
 
-  if (path === `${PRE}/call`) {
-    return call(req);
-  } else if (path === `${PRE}/notification`) {
-    return await notification(identity);
+  // Root is the only path accessible without authentication for healtcheck.
+  if (path === `${PRE}`) {
+    return ok("hello");
+  }
+
+  // Check identity for every request.
+  const identity = await getIdentity(req);
+  if (!identity) return unauthorized();
+
+  if (req.method === "GET") {
+    if (path === `${PRE}/call`) {
+      return callStream(req);
+    } else if (path === `${PRE}/notification`) {
+      return await notificationStream(identity);
+    } else {
+      return notFound();
+    }
+  } else if (req.method === "POST") {
+    if (path === `${PRE}/call/add`) {
+      return await addCall(req, identity);
+    } else if (path === `${PRE}/call/ring`) {
+      return await ringCall(req);
+    } else if (path === `${PRE}/call/stop`) {
+      return await stopCall(req);
+    } else {
+      return notFound();
+    }
+  } else if (req.method === "OPTIONS") {
+    return succeeded();
   } else {
-    return notFound();
+    return methodNotAllowed();
   }
 }
 
 // -----------------------------------------------------------------------------
-// streamServer
+// intercomServer
 // -----------------------------------------------------------------------------
-function streamServer() {
+function intercomServer() {
   Deno.serve({
     hostname: HTTP_HOSTNAME,
     port: HTTP_PORT,
@@ -217,6 +363,6 @@ function streamServer() {
 // -----------------------------------------------------------------------------
 const nc = await connect(NATS_SERVERS) as NatsConnection;
 
-streamServer();
+intercomServer();
 
 await nc.closed();
