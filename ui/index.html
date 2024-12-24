@@ -5,53 +5,52 @@
 
     <script>
       globalThis.notification = globalThis.notification || {};
-      globalThis.notification.user = "user1";
+      globalThis.notification.user = "";
     </script>
   </head>
 
-  <body>
-    <h1><span id="user"></span></h1>
+  <body style="margin: 0px;">
+    <div style="margin: 20px;">
+      <h2><span id="user"></span></h2>
 
-    <form
-      id="callForm"
-      action="http://127.0.0.1:8002/intercom/call/add"
-      method="POST"
-    >
-      <label
-        for="caller"
-        style="width: 100px; display: inline-block"
-      >Caller:</label>
-      <input
-        type="text"
-        id="caller"
-        name="caller"
-        value="f:d704f61d-fade-4641-b03a-1f211206c5b6:user1"
-        required
-        style="width: 300px"
+      <form
+        id="callForm"
+        action="http://127.0.0.1:8002/intercom/call/add"
+        method="POST"
       >
-      <br />
+        <label
+          for="caller"
+          style="width: 100px; display: inline-block"
+        >Caller:</label>
+        <input
+          type="text"
+          id="caller"
+          name="caller"
+          value="f:d704f61d-fade-4641-b03a-1f211206c5b6:user1"
+          required
+          style="width: 300px"
+        >
+        <br />
 
-      <label
-        for="callee"
-        style="width: 100px; display: inline-block"
-      >Callee:</label>
-      <input
-        type="text"
-        id="callee"
-        name="callee"
-        value="f:d704f61d-fade-4641-b03a-1f211206c5b6:user2"
-        required
-        style="width: 300px"
-      >
-      <br />
+        <label
+          for="callee"
+          style="width: 100px; display: inline-block"
+        >Callee:</label>
+        <input
+          type="text"
+          id="callee"
+          name="callee"
+          value="f:d704f61d-fade-4641-b03a-1f211206c5b6:user2"
+          required
+          style="width: 300px"
+        >
+        <br />
 
-      <button type="submit">Call</button>
-    </form>
+        <button type="submit">Call</button>
+      </form>
+    </div>
 
     <script>
-      const el = document.getElementById("user");
-      el.textContent = globalThis.notification.user;
-
       const form = document.getElementById("callForm");
 
       form.addEventListener("submit", async (e) => {
@@ -82,6 +81,7 @@
       });
     </script>
 
+    <script src="silent-login.js"></script>
     <script src="notification.js"></script>
   </body>
 </html>
