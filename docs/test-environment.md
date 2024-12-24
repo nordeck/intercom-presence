@@ -53,6 +53,10 @@ server {
 
 ### ics.nightly.opendesk.qa
 
+There is a local reverse proxy for this domain because we want to run our
+additional ICS endpoints on the same domain to get credentials. ICS's session
+cookie will be used to get and validate the user.
+
 ```config
 server {
   listen 443 ssl;
