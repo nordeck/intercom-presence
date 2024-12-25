@@ -10,8 +10,9 @@ let ringCounter = 0;
 // deno-lint-ignore no-unused-vars
 async function call() {
   document.getElementById("button-call").style.display = "none";
-  document.getElementById("button-cancel").style.display = "block";
   document.getElementById("spinner").style.display = "block";
+  document.getElementById("button-cancel").disabled = true;
+  document.getElementById("button-cancel").style.display = "block";
 
   const callee = document.getElementById("callee").value;
   const payload = {
@@ -34,10 +35,13 @@ async function call() {
     callId = data.call_id;
     ringCounter = 0;
     setTimeout(ring, 1000);
+
+    document.getElementById("button-cancel").disabled = false;
   } catch {
-    document.getElementById("button-call").style.display = "block";
     document.getElementById("button-cancel").style.display = "none";
+    document.getElementById("button-cancel").disabled = false;
     document.getElementById("spinner").style.display = "none";
+    document.getElementById("button-call").style.display = "block";
   }
 }
 
@@ -70,9 +74,10 @@ async function ring() {
     ringCounter += 1;
     setTimeout(ring, 1000);
   } catch {
-    document.getElementById("button-call").style.display = "block";
     document.getElementById("button-cancel").style.display = "none";
+    document.getElementById("button-cancel").disabled = false;
     document.getElementById("spinner").style.display = "none";
+    document.getElementById("button-call").style.display = "block";
   }
 }
 
@@ -82,7 +87,7 @@ async function ring() {
 async function cancel() {
   try {
     ringCounter = 99;
-    document.getElementById("button-cancel").style.display = "none";
+    document.getElementById("button-cancel").disabled = true;
 
     if (!callId) throw "missing call id";
 
