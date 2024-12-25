@@ -133,38 +133,64 @@ function phoneIcon() {
 // createCallPopup
 // -----------------------------------------------------------------------------
 function createCallPopup(callId, callerName) {
+  // Popup
   const callPopup = document.createElement("div");
   callPopup.id = `call-${callId}`;
   callPopup.style.display = "flex";
+  callPopup.style.flexDirection = "column";
   callPopup.style.width = "300px";
   callPopup.style.height = "100px";
-  callPopup.style.margin = "4px 8px";
-  callPopup.style.padding = "0px";
+  callPopup.style.margin = "8px";
   callPopup.style.border = "1px solid #e0e0e0";
   callPopup.style.borderRadius = "8px";
   callPopup.style.boxShadow = "0 4px 6px rgba(0, 0, 0, 0.1)";
   callPopup.style.backgroundColor = "#fff";
 
+  // Header
   const header = document.createElement("div");
   header.style.display = "flex";
   header.style.width = "100%";
-  header.style.margin = "0px 0px auto 8px";
+  header.style.marginTop = "8px";
+  header.style.marginBottom = "auto";
   header.style.alignItems = "center";
   callPopup.appendChild(header);
 
-  header.appendChild(phoneIcon());
+  // Header, icon
+  const headerIcon = phoneIcon();
+  headerIcon.style.margin = "auto 12px";
+  header.appendChild(headerIcon);
 
+  // Header, message
   const message = document.createElement("span");
   message.textContent = `${callerName} is calling`;
-  message.style.margin = "8px";
   header.appendChild(message);
 
+  // Header, close button
   const close = document.createElement("button");
-  close.style.margin = "4px 0px auto auto";
+  close.style.margin = "0px 0px auto auto";
   close.style.border = "none";
   close.style.backgroundColor = "#fff";
   close.appendChild(closeIcon());
   header.appendChild(close);
+
+  // Body
+  const body = document.createElement("div");
+  body.style.display = "flex";
+  body.style.flex = "1";
+  body.style.width = "100%";
+  body.style.justifyContent = "center";
+  body.style.alignItems = "center";
+  callPopup.appendChild(body);
+
+  // Body, reject button
+  const reject = document.createElement("button");
+  reject.appendChild(closeIcon());
+  body.appendChild(reject);
+
+  // Body, accept button
+  const accept = document.createElement("button");
+  accept.appendChild(closeIcon());
+  body.appendChild(accept);
 
   return callPopup;
 }
