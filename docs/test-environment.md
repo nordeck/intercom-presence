@@ -46,8 +46,9 @@ server {
   location / {
     try_files $uri $uri/ =404;
 
-    add_header Cache-Control "no-store, must-revalidate";
-    add_header Expires "0";
+    add_header "Access-Control-Allow-Origin" $http_origin always;
+    add_header "Cache-Control" "no-store, must-revalidate";
+    add_header "Expires" "0";
   }
 }
 ```
@@ -85,8 +86,8 @@ server {
     keepalive_timeout 3600s;
 
     add_header "Access-Control-Allow-Origin" $http_origin always;
-    add_header Cache-Control "no-store, must-revalidate";
-    add_header Expires "0";
+    add_header "Cache-Control" "no-store, must-revalidate";
+    add_header "Expires" "0";
   }
 
   location / {
@@ -116,3 +117,18 @@ Start the intercom service in the local host:
 ```bash
 deno run --allow-net --unsafely-ignore-certificate-errors --watch intercom.ts
 ```
+
+## Enabling the notification channel for other applications
+
+Open an openDesk application and run the following command in the browser
+console:
+
+```javascript
+import('https://myapp.nightly.opendesk.qa/notification.js')
+```
+
+This page will subscribe to the notification channel and will receive calls,
+notifications, etc.
+
+The manual import is only for testing. This module should be added to the source
+code.
