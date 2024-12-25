@@ -45,6 +45,9 @@ server {
 
   location / {
     try_files $uri $uri/ =404;
+
+    add_header Cache-Control "no-store, must-revalidate";
+    add_header Expires "0";
   }
 }
 ```
@@ -59,8 +62,8 @@ cookie will be used to get and validate the user.
 
 ```config
 server {
-  listen 443 ssl;
-  listen [::]:443 ssl;
+  listen 443 ssl http2;
+  listen [::]:443 ssl http2;
 
   include snippets/snakeoil.conf;
   server_name ics.nightly.opendesk.qa;
@@ -82,6 +85,8 @@ server {
     keepalive_timeout 3600s;
 
     add_header "Access-Control-Allow-Origin" $http_origin always;
+    add_header Cache-Control "no-store, must-revalidate";
+    add_header Expires "0";
   }
 
   location / {
