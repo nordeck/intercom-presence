@@ -7,6 +7,7 @@ let ringCounter = 0;
 // -----------------------------------------------------------------------
 // call
 // -----------------------------------------------------------------------
+// deno-lint-ignore no-unused-vars
 async function call() {
   document.getElementById("button-call").style.display = "none";
   document.getElementById("button-cancel").style.display = "block";
@@ -102,9 +103,3 @@ async function cancel() {
     // Do nothing.
   }
 }
-
-// -----------------------------------------------------------------------
-// make linter happy
-// -----------------------------------------------------------------------
-console.log("call.js loaded");
-console.log(call);
