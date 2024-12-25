@@ -49,7 +49,7 @@ function getCategoryItems(entries) {
 // ---------------------------------------------------------------------------
 function getMenuItems(nav) {
   try {
-    // Skip if no portal session (anonymous user).
+    // Skip if no portal session
     const identifier = nav.categories?.[0]?.identifier;
     if (!identifier || identifier === "swp.anonymous") {
       throw new Error("no item");
@@ -166,9 +166,9 @@ function createTopbar(nav) {
 }
 
 // ---------------------------------------------------------------------------
-// setUuid
+// getIdentity
 // ---------------------------------------------------------------------------
-async function setUuid() {
+async function getIdentity() {
   try {
     const url = `${ICS}/uuid`;
     const res = await fetch(url, {
@@ -180,18 +180,24 @@ async function setUuid() {
 
     if (res.status !== 200) throw "uuid request is rejected";
 
-    const user = await res.text();
-    if (!user) throw "missing user uuid";
+    const identity = await res.text();
+    if (!identity) throw "missing identity";
 
-    globalThis.notification.user = user;
-
-    const el = document.getElementById("user");
-    el.textContent = `Logged in as ${globalThis.notification.user}`;
-
-    return user;
+    return identity;
   } catch {
     return undefined;
   }
+}
+
+// ---------------------------------------------------------------------------
+// updateUI
+// ---------------------------------------------------------------------------
+function updateUI(identity) {
+  globalThis.notification.identity = identity;
+
+  const el = document.getElementById("identity");
+  el.textContent = `Logged in as ${globalThis.notification.identity}`;
+  document.getElementById("button-call").disabled = false;
 }
 
 // ---------------------------------------------------------------------------
@@ -249,7 +255,9 @@ function silentLogin() {
 
     // Get the navigation data and recreate the topbar with menu.
     iframeNavigation.onload = async () => {
-      await setUuid();
+      const identity = await getIdentity();
+      updateUI(identity);
+
       const nav = await getNavigationData();
       createTopbar(nav);
     };
