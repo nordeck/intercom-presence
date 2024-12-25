@@ -33,8 +33,8 @@ point to the reverse proxy. For example:
 
 ```config
 server {
-  listen 443 ssl;
-  listen [::]:443 ssl;
+  listen 443 ssl http2;
+  listen [::]:443 ssl http2;
 
   include snippets/snakeoil.conf;
   server_name myapp.nightly.opendesk.qa;
