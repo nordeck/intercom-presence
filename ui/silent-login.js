@@ -256,6 +256,8 @@ function silentLogin() {
     // Get the navigation data and recreate the topbar with menu.
     iframeNavigation.onload = async () => {
       const identity = await getIdentity();
+      if (!identity) return;
+
       updateUI(identity);
 
       const nav = await getNavigationData();
