@@ -28,13 +28,15 @@ function onCallMessage(callId, e) {
     if (!data) throw "missing call data";
 
     if (data.type === "ring") {
-      // Extend the expire time if it is not stopped explicitly.
+      // Call is still active on the caller side.
       if (globalThis.notification[`call-${callId}`] !== 0) {
         globalThis.notification[`call-${callId}`] = Date.now();
       }
+    } else if (data.type === "ignore") {
+      // Call is seen and ignored by callee but caller is not informed.
+      globalThis.notification[`call-${callId}`] = 0;
     } else if (data.type === "stop") {
-      // Set timer as expired. So, the popup and the subscription will be
-      // removed.
+      // Call is cancelled by caller.
       globalThis.notification[`call-${callId}`] = 0;
     }
   } catch {
@@ -178,11 +180,23 @@ function acceptIcon() {
 // -----------------------------------------------------------------------------
 // closePopup
 // -----------------------------------------------------------------------------
-function closePopup(callId) {
+async function closePopup(callId) {
   try {
     // Reset timer to allow the watcher to remove call objects.
     globalThis.notification[`call-${callId}`] = 0;
-    console.error(`closePopup ${callId}`);
+
+    const payload = {
+      "call_id": callId,
+    };
+    const url = `${NOTIFICATION_INTERCOM_SERVER}/intercom/call/ignore`;
+    await fetch(url, {
+      credentials: "include",
+      headers: {
+        Accept: "application/json",
+      },
+      method: "post",
+      body: JSON.stringify(payload),
+    });
   } catch {
     // Do nothing.
   }

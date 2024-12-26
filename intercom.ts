@@ -28,6 +28,10 @@ const ACTION_HEADERS = {
   "Access-Control-Allow-Credentials": "true",
 } as Headers;
 
+interface Action {
+  [key: string]: string;
+}
+
 // -----------------------------------------------------------------------------
 // internalServerError
 // -----------------------------------------------------------------------------
@@ -267,18 +271,17 @@ async function addCall(req: Request, identity: string): Promise<Response> {
 }
 
 // -----------------------------------------------------------------------------
-// ringCall
+// callAction
+//
+// Template for call action functions.
 // -----------------------------------------------------------------------------
-async function ringCall(req: Request): Promise<Response> {
+async function callAction(req: Request, data: Action): Promise<Response> {
   const pl = await req.json();
   const callId = pl.call_id;
 
   if (!callId) return unauthorized();
 
   const headers = ACTION_HEADERS;
-  const data = {
-    "type": "ring",
-  };
   const action = JSON.stringify(data);
 
   await publishCallAction(callId, action);
@@ -290,26 +293,36 @@ async function ringCall(req: Request): Promise<Response> {
 }
 
 // -----------------------------------------------------------------------------
+// ringCall
+// -----------------------------------------------------------------------------
+async function ringCall(req: Request): Promise<Response> {
+  const data = {
+    "type": "ring",
+  };
+
+  return await callAction(req, data);
+}
+
+// -----------------------------------------------------------------------------
 // stopCall
 // -----------------------------------------------------------------------------
 async function stopCall(req: Request): Promise<Response> {
-  const pl = await req.json();
-  const callId = pl.call_id;
-
-  if (!callId) return unauthorized();
-
-  const headers = ACTION_HEADERS;
   const data = {
     "type": "stop",
   };
-  const action = JSON.stringify(data);
 
-  await publishCallAction(callId, action);
+  return await callAction(req, data);
+}
 
-  return new Response(action, {
-    status: 200,
-    headers,
-  });
+// -----------------------------------------------------------------------------
+// ignoreCall
+// -----------------------------------------------------------------------------
+async function ignoreCall(req: Request): Promise<Response> {
+  const data = {
+    "type": "ignore",
+  };
+
+  return await callAction(req, data);
 }
 
 // -----------------------------------------------------------------------------
@@ -343,6 +356,8 @@ async function handler(req: Request): Promise<Response> {
       return await ringCall(req);
     } else if (path === `${PRE}/call/stop`) {
       return await stopCall(req);
+    } else if (path === `${PRE}/call/ignore`) {
+      return await ignoreCall(req);
     } else {
       return notFound();
     }

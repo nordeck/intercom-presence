@@ -124,7 +124,7 @@ Open an openDesk application and run the following command in the browser
 console:
 
 ```javascript
-import('https://myapp.nightly.opendesk.qa/notification.js')
+import("https://myapp.nightly.opendesk.qa/notification.js");
 ```
 
 This page will subscribe to the notification channel and will receive calls,
