@@ -28,10 +28,6 @@ const ACTION_HEADERS = {
   "Access-Control-Allow-Credentials": "true",
 } as Headers;
 
-interface Action {
-  [key: string]: string;
-}
-
 // -----------------------------------------------------------------------------
 // internalServerError
 // -----------------------------------------------------------------------------
@@ -272,16 +268,17 @@ async function addCall(req: Request, identity: string): Promise<Response> {
 
 // -----------------------------------------------------------------------------
 // callAction
-//
-// Template for call action functions.
 // -----------------------------------------------------------------------------
-async function callAction(req: Request, data: Action): Promise<Response> {
+async function callAction(req: Request, actionType: string): Promise<Response> {
   const pl = await req.json();
   const callId = pl.call_id;
 
   if (!callId) return unauthorized();
 
   const headers = ACTION_HEADERS;
+  const data = {
+    "type": actionType,
+  };
   const action = JSON.stringify(data);
 
   await publishCallAction(callId, action);
@@ -290,39 +287,6 @@ async function callAction(req: Request, data: Action): Promise<Response> {
     status: 200,
     headers,
   });
-}
-
-// -----------------------------------------------------------------------------
-// ringCall
-// -----------------------------------------------------------------------------
-async function ringCall(req: Request): Promise<Response> {
-  const data = {
-    "type": "ring",
-  };
-
-  return await callAction(req, data);
-}
-
-// -----------------------------------------------------------------------------
-// stopCall
-// -----------------------------------------------------------------------------
-async function stopCall(req: Request): Promise<Response> {
-  const data = {
-    "type": "stop",
-  };
-
-  return await callAction(req, data);
-}
-
-// -----------------------------------------------------------------------------
-// ignoreCall
-// -----------------------------------------------------------------------------
-async function ignoreCall(req: Request): Promise<Response> {
-  const data = {
-    "type": "ignore",
-  };
-
-  return await callAction(req, data);
 }
 
 // -----------------------------------------------------------------------------
@@ -353,11 +317,15 @@ async function handler(req: Request): Promise<Response> {
     if (path === `${PRE}/call/add`) {
       return await addCall(req, identity);
     } else if (path === `${PRE}/call/ring`) {
-      return await ringCall(req);
+      return await callAction(req, "ring");
     } else if (path === `${PRE}/call/stop`) {
-      return await stopCall(req);
+      return await callAction(req, "stop");
     } else if (path === `${PRE}/call/ignore`) {
-      return await ignoreCall(req);
+      return await callAction(req, "ignore");
+    } else if (path === `${PRE}/call/reject`) {
+      return await callAction(req, "reject");
+    } else if (path === `${PRE}/call/accept`) {
+      return await callAction(req, "accept");
     } else {
       return notFound();
     }

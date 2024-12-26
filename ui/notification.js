@@ -32,11 +32,15 @@ function onCallMessage(callId, e) {
       if (globalThis.notification[`call-${callId}`] !== 0) {
         globalThis.notification[`call-${callId}`] = Date.now();
       }
-    } else if (data.type === "ignore") {
-      // Call is seen and ignored by callee but caller is not informed.
-      globalThis.notification[`call-${callId}`] = 0;
     } else if (data.type === "stop") {
       // Call is cancelled by caller.
+      globalThis.notification[`call-${callId}`] = 0;
+    } else if (
+      data.type === "ignore" ||
+      data.type === "reject" ||
+      data.type === "accept"
+    ) {
+      // Call is seen by callee and an action is selected by callee.
       globalThis.notification[`call-${callId}`] = 0;
     }
   } catch {
@@ -178,9 +182,9 @@ function acceptIcon() {
 }
 
 // -----------------------------------------------------------------------------
-// closePopup
+// callAction
 // -----------------------------------------------------------------------------
-async function closePopup(callId) {
+async function callAction(callId, action) {
   try {
     // Reset timer to allow the watcher to remove call objects.
     globalThis.notification[`call-${callId}`] = 0;
@@ -188,7 +192,7 @@ async function closePopup(callId) {
     const payload = {
       "call_id": callId,
     };
-    const url = `${NOTIFICATION_INTERCOM_SERVER}/intercom/call/ignore`;
+    const url = `${NOTIFICATION_INTERCOM_SERVER}/intercom/call/${action}`;
     await fetch(url, {
       credentials: "include",
       headers: {
@@ -203,17 +207,24 @@ async function closePopup(callId) {
 }
 
 // -----------------------------------------------------------------------------
+// ignoreCall
+// -----------------------------------------------------------------------------
+async function ignoreCall(callId) {
+  await callAction(callId, "ignore");
+}
+
+// -----------------------------------------------------------------------------
 // rejectCall
 // -----------------------------------------------------------------------------
-function rejectCall(callId) {
-  console.error(`rejectCall ${callId}`);
+async function rejectCall(callId) {
+  await callAction(callId, "reject");
 }
 
 // -----------------------------------------------------------------------------
 // acceptCall
 // -----------------------------------------------------------------------------
-function acceptCall(callId) {
-  console.error(`acceptCall ${callId}`);
+async function acceptCall(callId) {
+  await callAction(callId, "accept");
 }
 
 // -----------------------------------------------------------------------------
@@ -225,7 +236,7 @@ function createCallPopup(callId, callerName) {
   callPopup.id = `call-${callId}`;
   callPopup.style.display = "flex";
   callPopup.style.flexDirection = "column";
-  callPopup.style.width = "300px";
+  callPopup.style.width = "240px";
   callPopup.style.height = "100px";
   callPopup.style.margin = "8px";
   callPopup.style.border = "1px solid #e0e0e0";
@@ -260,7 +271,7 @@ function createCallPopup(callId, callerName) {
   close.style.cursor = "pointer";
   close.appendChild(closeIcon());
   close.onclick = () => {
-    closePopup(callId);
+    ignoreCall(callId);
   };
   header.appendChild(close);
 
