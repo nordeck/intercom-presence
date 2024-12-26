@@ -1,5 +1,8 @@
+// These two servers will be the same if the integration is done. Currently the
+// proxy server redirects requests to the right servers depending on the path
+// values.
 const NOTIFICATION_ICS_SERVER = "https://ics.nightly.opendesk.qa";
-const NOTIFICATION_STREAM_SERVER = "https://ics.nightly.opendesk.qa";
+const NOTIFICATION_INTERCOM_SERVER = "https://ics.nightly.opendesk.qa";
 
 // -----------------------------------------------------------------------------
 // createNotificationContainer
@@ -25,12 +28,14 @@ function onCallMessage(callId, e) {
     if (!data) throw "missing call data";
 
     if (data.type === "ring") {
-      // Extend the expire time.
-      globalThis.notification[`call-${callId}`] = Date.now();
+      // Extend the expire time if it is not stopped explicitly.
+      if (globalThis.notification[`call-${callId}`] !== 0) {
+        globalThis.notification[`call-${callId}`] = Date.now();
+      }
     } else if (data.type === "stop") {
       // Set timer as expired. So, the popup and the subscription will be
       // removed.
-      globalThis.notification[`call-${callId}`] = "0";
+      globalThis.notification[`call-${callId}`] = 0;
     }
   } catch {
     // do nothing
@@ -41,7 +46,7 @@ function onCallMessage(callId, e) {
 // subscribeToCall
 // -----------------------------------------------------------------------------
 function subscribeToCall(callId) {
-  const src = `${NOTIFICATION_STREAM_SERVER}/intercom/call?id=${callId}`;
+  const src = `${NOTIFICATION_INTERCOM_SERVER}/intercom/call?id=${callId}`;
   const eventSrc = new EventSource(src, { withCredentials: true });
 
   eventSrc.onmessage = (e) => {
@@ -62,10 +67,12 @@ function removeCall(callId, callPopup, callEventSrc) {
   if (!callId) throw "invalid call id";
   if (!callPopup) throw "missing call div";
   if (!callEventSrc) throw "missing call event source";
-  if (!globalThis.notification[`call-${callId}`]) throw "missing call timer";
+  if (globalThis.notification[`call-${callId}`] === undefined) {
+    throw "missing call timer";
+  }
 
   // If it is still ringing then check later.
-  if (Number(globalThis.notification[`call-${callId}`]) > Date.now() - 5000) {
+  if (globalThis.notification[`call-${callId}`] > Date.now() - 5000) {
     setTimeout(() => {
       removeCall(callId, callPopup, callEventSrc);
     }, 1000);
@@ -172,7 +179,13 @@ function acceptIcon() {
 // closePopup
 // -----------------------------------------------------------------------------
 function closePopup(callId) {
-  console.error(`closePopup ${callId}`);
+  try {
+    // Reset timer to allow the watcher to remove call objects.
+    globalThis.notification[`call-${callId}`] = 0;
+    console.error(`closePopup ${callId}`);
+  } catch {
+    // Do nothing.
+  }
 }
 
 // -----------------------------------------------------------------------------
@@ -366,7 +379,7 @@ async function subscribeToNotification() {
     return;
   }
 
-  const src = `${NOTIFICATION_STREAM_SERVER}/intercom/notification`;
+  const src = `${NOTIFICATION_INTERCOM_SERVER}/intercom/notification`;
   const eventSrc = new EventSource(src, { withCredentials: true });
 
   eventSrc.onmessage = (e) => {
