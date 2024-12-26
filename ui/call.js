@@ -7,6 +7,117 @@ let CALL_ID = "";
 let RING_COUNTER = 0;
 let EVENT_SRC;
 
+// -----------------------------------------------------------------------------
+// onCallMessage
+// -----------------------------------------------------------------------------
+function onCallMessage(e) {
+  try {
+    const data = JSON.parse(e.data);
+    if (!data) throw "missing call data";
+
+    if (data.type === "reject") {
+      // ring function will restore UI
+      RING_COUNTER = 81;
+    } else if (data.type === "accept") {
+      // ring function will restore UI
+      RING_COUNTER = 71;
+    }
+  } catch {
+    // do nothing
+  }
+}
+
+// -----------------------------------------------------------------------------
+// subscribeToCall
+// -----------------------------------------------------------------------------
+function subscribeToCall() {
+  // Close the previous event source if exists.
+  try {
+    EVENT_SRC.close();
+  } catch {
+    // Do nothing.
+  }
+
+  const src = `${CALL_INTERCOM_SERVER}/intercom/call?id=${CALL_ID}`;
+  EVENT_SRC = new EventSource(src, { withCredentials: true });
+
+  EVENT_SRC.onmessage = (e) => {
+    onCallMessage(e);
+  };
+
+  EVENT_SRC.onerror = () => {
+    console.error("call channel failed.");
+  };
+}
+
+// -----------------------------------------------------------------------
+// cancel
+// -----------------------------------------------------------------------
+async function cancel() {
+  try {
+    document.getElementById("button-cancel").disabled = true;
+
+    // ring function will restore UI
+    RING_COUNTER = 91;
+
+    if (!CALL_ID) throw "missing call id";
+
+    const url = `${CALL_INTERCOM_SERVER}/intercom/call/cancel`;
+    const payload = {
+      "call_id": CALL_ID,
+    };
+
+    await fetch(url, {
+      credentials: "include",
+      headers: {
+        Accept: "application/json",
+      },
+      method: "post",
+      body: JSON.stringify(payload),
+    });
+  } catch {
+    // Do nothing.
+  }
+}
+
+// -----------------------------------------------------------------------
+// ring
+// -----------------------------------------------------------------------
+async function ring() {
+  try {
+    if (!CALL_ID) throw "missing call id";
+    if (RING_COUNTER > 90) throw "cancelled call";
+    if (RING_COUNTER > 80) throw "rejected call";
+    if (RING_COUNTER > 70) throw "accepted call";
+    if (RING_COUNTER > 9) {
+      await cancel();
+      throw "so many tries";
+    }
+
+    const url = `${CALL_INTERCOM_SERVER}/intercom/call/ring`;
+    const payload = {
+      "call_id": CALL_ID,
+    };
+
+    await fetch(url, {
+      credentials: "include",
+      headers: {
+        Accept: "application/json",
+      },
+      method: "post",
+      body: JSON.stringify(payload),
+    });
+
+    RING_COUNTER += 1;
+    setTimeout(ring, 1000);
+  } catch {
+    document.getElementById("button-cancel").style.display = "none";
+    document.getElementById("button-cancel").disabled = false;
+    document.getElementById("spinner").style.display = "none";
+    document.getElementById("button-call").style.display = "block";
+  }
+}
+
 // -----------------------------------------------------------------------
 // call
 // -----------------------------------------------------------------------
@@ -37,6 +148,7 @@ async function call() {
 
     CALL_ID = data.call_id;
     RING_COUNTER = 0;
+    subscribeToCall();
     setTimeout(ring, 1000);
 
     document.getElementById("button-cancel").disabled = false;
@@ -46,109 +158,4 @@ async function call() {
     document.getElementById("spinner").style.display = "none";
     document.getElementById("button-call").style.display = "block";
   }
-}
-
-// -----------------------------------------------------------------------
-// ring
-// -----------------------------------------------------------------------
-async function ring() {
-  try {
-    if (!CALL_ID) throw "missing call id";
-    if (RING_COUNTER > 90) throw "cancelled call";
-    if (RING_COUNTER > 9) {
-      cancel();
-      throw "so many tries";
-    }
-
-    const url = `${CALL_INTERCOM_SERVER}/intercom/call/ring`;
-    const payload = {
-      "call_id": CALL_ID,
-    };
-
-    await fetch(url, {
-      credentials: "include",
-      headers: {
-        Accept: "application/json",
-      },
-      method: "post",
-      body: JSON.stringify(payload),
-    });
-
-    RING_COUNTER += 1;
-    setTimeout(ring, 1000);
-  } catch {
-    document.getElementById("button-cancel").style.display = "none";
-    document.getElementById("button-cancel").disabled = false;
-    document.getElementById("spinner").style.display = "none";
-    document.getElementById("button-call").style.display = "block";
-  }
-}
-
-// -----------------------------------------------------------------------
-// cancel
-// -----------------------------------------------------------------------
-async function cancel() {
-  try {
-    RING_COUNTER = 99;
-    document.getElementById("button-cancel").disabled = true;
-
-    if (!CALL_ID) throw "missing call id";
-
-    const url = `${CALL_INTERCOM_SERVER}/intercom/call/stop`;
-    const payload = {
-      "call_id": CALL_ID,
-    };
-
-    await fetch(url, {
-      credentials: "include",
-      headers: {
-        Accept: "application/json",
-      },
-      method: "post",
-      body: JSON.stringify(payload),
-    });
-  } catch {
-    // Do nothing.
-  }
-}
-
-// -----------------------------------------------------------------------------
-// onCallMessage
-// -----------------------------------------------------------------------------
-function onCallMessage(e) {
-  try {
-    const data = JSON.parse(e.data);
-    if (!data) throw "missing call data";
-
-    if (data.type === "reject") {
-      console.error("rejected");
-    } else if (data.type === "accept") {
-      console.error("accepted");
-    }
-  } catch {
-    // do nothing
-  }
-}
-
-// -----------------------------------------------------------------------------
-// subscribeToCall
-// -----------------------------------------------------------------------------
-function subscribeToCall() {
-  // Close the previous event source if exists.
-  try {
-    EVENT_SRC.close();
-  } catch {
-    // Do nothing.
-  }
-
-  const src = `${CALL_INTERCOM_SERVER}/intercom/call?id=${CALL_ID}`;
-  EVENT_SRC = new EventSource(src, { withCredentials: true });
-
-  EVENT_SRC.onmessage = (e) => {
-    onCallMessage(e);
-  };
-
-  EVENT_SRC.onerror = () => {
-    console.error("call channel failed.");
-  };
 }

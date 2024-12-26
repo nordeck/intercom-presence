@@ -318,8 +318,8 @@ async function handler(req: Request): Promise<Response> {
       return await addCall(req, identity);
     } else if (path === `${PRE}/call/ring`) {
       return await callAction(req, "ring");
-    } else if (path === `${PRE}/call/stop`) {
-      return await callAction(req, "stop");
+    } else if (path === `${PRE}/call/cancel`) {
+      return await callAction(req, "cancel");
     } else if (path === `${PRE}/call/ignore`) {
       return await callAction(req, "ignore");
     } else if (path === `${PRE}/call/reject`) {

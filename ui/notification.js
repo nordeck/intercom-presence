@@ -37,7 +37,7 @@ globalThis.notificationNs.onCallMessage = (callId, e) => {
       if (globalThis.notificationNs[`call-${callId}`] !== 0) {
         globalThis.notificationNs[`call-${callId}`] = Date.now();
       }
-    } else if (data.type === "stop") {
+    } else if (data.type === "cancel") {
       // Call is cancelled by caller.
       globalThis.notificationNs[`call-${callId}`] = 0;
     } else if (
