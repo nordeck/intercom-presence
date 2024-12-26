@@ -1,8 +1,11 @@
 // -----------------------------------------------------------------------
 // Globals
 // -----------------------------------------------------------------------
-let callId = "";
-let ringCounter = 0;
+const CALL_INTERCOM_SERVER = "https://ics.nightly.opendesk.qa";
+
+let CALL_ID = "";
+let RING_COUNTER = 0;
+let EVENT_SRC;
 
 // -----------------------------------------------------------------------
 // call
@@ -20,7 +23,7 @@ async function call() {
   };
 
   try {
-    const url = "https://ics.nightly.opendesk.qa/intercom/call/add";
+    const url = `${CALL_INTERCOM_SERVER}/intercom/call/add`;
     const res = await fetch(url, {
       credentials: "include",
       headers: {
@@ -32,8 +35,8 @@ async function call() {
     const data = await res.json();
     if (!data?.call_id) throw "failed to start the call";
 
-    callId = data.call_id;
-    ringCounter = 0;
+    CALL_ID = data.call_id;
+    RING_COUNTER = 0;
     setTimeout(ring, 1000);
 
     document.getElementById("button-cancel").disabled = false;
@@ -50,16 +53,16 @@ async function call() {
 // -----------------------------------------------------------------------
 async function ring() {
   try {
-    if (!callId) throw "missing call id";
-    if (ringCounter > 90) throw "cancelled call";
-    if (ringCounter > 9) {
+    if (!CALL_ID) throw "missing call id";
+    if (RING_COUNTER > 90) throw "cancelled call";
+    if (RING_COUNTER > 9) {
       cancel();
       throw "so many tries";
     }
 
-    const url = "https://ics.nightly.opendesk.qa/intercom/call/ring";
+    const url = `${CALL_INTERCOM_SERVER}/intercom/call/ring`;
     const payload = {
-      "call_id": callId,
+      "call_id": CALL_ID,
     };
 
     await fetch(url, {
@@ -71,7 +74,7 @@ async function ring() {
       body: JSON.stringify(payload),
     });
 
-    ringCounter += 1;
+    RING_COUNTER += 1;
     setTimeout(ring, 1000);
   } catch {
     document.getElementById("button-cancel").style.display = "none";
@@ -86,14 +89,14 @@ async function ring() {
 // -----------------------------------------------------------------------
 async function cancel() {
   try {
-    ringCounter = 99;
+    RING_COUNTER = 99;
     document.getElementById("button-cancel").disabled = true;
 
-    if (!callId) throw "missing call id";
+    if (!CALL_ID) throw "missing call id";
 
-    const url = "https://ics.nightly.opendesk.qa/intercom/call/stop";
+    const url = `${CALL_INTERCOM_SERVER}/intercom/call/stop`;
     const payload = {
-      "call_id": callId,
+      "call_id": CALL_ID,
     };
 
     await fetch(url, {
@@ -107,4 +110,45 @@ async function cancel() {
   } catch {
     // Do nothing.
   }
+}
+
+// -----------------------------------------------------------------------------
+// onCallMessage
+// -----------------------------------------------------------------------------
+function onCallMessage(e) {
+  try {
+    const data = JSON.parse(e.data);
+    if (!data) throw "missing call data";
+
+    if (data.type === "reject") {
+      console.error("rejected");
+    } else if (data.type === "accept") {
+      console.error("accepted");
+    }
+  } catch {
+    // do nothing
+  }
+}
+
+// -----------------------------------------------------------------------------
+// subscribeToCall
+// -----------------------------------------------------------------------------
+function subscribeToCall() {
+  // Close the previous event source if exists.
+  try {
+    EVENT_SRC.close();
+  } catch {
+    // Do nothing.
+  }
+
+  const src = `${CALL_INTERCOM_SERVER}/intercom/call?id=${CALL_ID}`;
+  EVENT_SRC = new EventSource(src, { withCredentials: true });
+
+  EVENT_SRC.onmessage = (e) => {
+    onCallMessage(e);
+  };
+
+  EVENT_SRC.onerror = () => {
+    console.error("call channel failed.");
+  };
 }

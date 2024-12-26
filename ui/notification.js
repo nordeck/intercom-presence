@@ -1,13 +1,18 @@
+// -----------------------------------------------------------------------------
+// Namespace and config
+// -----------------------------------------------------------------------------
+globalThis.notificationNs = {};
+
 // These two servers will be the same if the integration is done. Currently the
 // proxy server redirects requests to the right servers depending on the path
 // values.
-const NOTIFICATION_ICS_SERVER = "https://ics.nightly.opendesk.qa";
-const NOTIFICATION_INTERCOM_SERVER = "https://ics.nightly.opendesk.qa";
+globalThis.notificationNs.icsServer = "https://ics.nightly.opendesk.qa";
+globalThis.notificationNs.intercomServer = "https://ics.nightly.opendesk.qa";
 
 // -----------------------------------------------------------------------------
 // createNotificationContainer
 // -----------------------------------------------------------------------------
-function createNotificationContainer() {
+globalThis.notificationNs.createNotificationContainer = () => {
   const notificationContainer = document.createElement("div");
 
   notificationContainer.id = "notificationContainer";
@@ -17,46 +22,47 @@ function createNotificationContainer() {
   notificationContainer.style.zIndex = "1000";
 
   document.body.appendChild(notificationContainer);
-}
+};
 
 // -----------------------------------------------------------------------------
 // onCallMessage
 // -----------------------------------------------------------------------------
-function onCallMessage(callId, e) {
+globalThis.notificationNs.onCallMessage = (callId, e) => {
   try {
     const data = JSON.parse(e.data);
     if (!data) throw "missing call data";
 
     if (data.type === "ring") {
       // Call is still active on the caller side.
-      if (globalThis.notification[`call-${callId}`] !== 0) {
-        globalThis.notification[`call-${callId}`] = Date.now();
+      if (globalThis.notificationNs[`call-${callId}`] !== 0) {
+        globalThis.notificationNs[`call-${callId}`] = Date.now();
       }
     } else if (data.type === "stop") {
       // Call is cancelled by caller.
-      globalThis.notification[`call-${callId}`] = 0;
+      globalThis.notificationNs[`call-${callId}`] = 0;
     } else if (
       data.type === "ignore" ||
       data.type === "reject" ||
       data.type === "accept"
     ) {
       // Call is seen by callee and an action is selected by callee.
-      globalThis.notification[`call-${callId}`] = 0;
+      globalThis.notificationNs[`call-${callId}`] = 0;
     }
   } catch {
     // do nothing
   }
-}
+};
 
 // -----------------------------------------------------------------------------
 // subscribeToCall
 // -----------------------------------------------------------------------------
-function subscribeToCall(callId) {
-  const src = `${NOTIFICATION_INTERCOM_SERVER}/intercom/call?id=${callId}`;
+globalThis.notificationNs.subscribeToCall = (callId) => {
+  const src =
+    `${globalThis.notificationNs.intercomServer}/intercom/call?id=${callId}`;
   const eventSrc = new EventSource(src, { withCredentials: true });
 
   eventSrc.onmessage = (e) => {
-    onCallMessage(callId, e);
+    globalThis.notificationNs.onCallMessage(callId, e);
   };
 
   eventSrc.onerror = () => {
@@ -64,38 +70,38 @@ function subscribeToCall(callId) {
   };
 
   return eventSrc;
-}
+};
 
 // -----------------------------------------------------------------------------
 // removeCall
 // -----------------------------------------------------------------------------
-function removeCall(callId, callPopup, callEventSrc) {
+globalThis.notificationNs.removeCall = (callId, callPopup, callEventSrc) => {
   if (!callId) throw "invalid call id";
   if (!callPopup) throw "missing call div";
   if (!callEventSrc) throw "missing call event source";
-  if (globalThis.notification[`call-${callId}`] === undefined) {
+  if (globalThis.notificationNs[`call-${callId}`] === undefined) {
     throw "missing call timer";
   }
 
   // If it is still ringing then check later.
-  if (globalThis.notification[`call-${callId}`] > Date.now() - 5000) {
+  if (globalThis.notificationNs[`call-${callId}`] > Date.now() - 5000) {
     setTimeout(() => {
-      removeCall(callId, callPopup, callEventSrc);
+      globalThis.notificationNs.removeCall(callId, callPopup, callEventSrc);
     }, 1000);
 
     return;
   }
 
   // Remove objects of this call since it doesn't ring anymore.
-  delete globalThis.notification[`call-${callId}`];
+  delete globalThis.notificationNs[`call-${callId}`];
   callPopup.remove();
   callEventSrc.close();
-}
+};
 
 // -----------------------------------------------------------------------------
 // createIcon
 // -----------------------------------------------------------------------------
-function createIcon(pathData, width, height, color) {
+globalThis.notificationNs.createIcon = (pathData, width, height, color) => {
   const ns = "http://www.w3.org/2000/svg";
   const icon = document.createElementNS(ns, "svg");
   icon.setAttribute("xmlns", "http://www.w3.org/2000/svg");
@@ -111,25 +117,25 @@ function createIcon(pathData, width, height, color) {
   }
 
   return icon;
-}
+};
 
 // -----------------------------------------------------------------------------
 // closeIcon
 // -----------------------------------------------------------------------------
-function closeIcon() {
+globalThis.notificationNs.closeIcon = () => {
   const pathData = [
     "M4.646 4.646a.5.5 0 0 1 .708 0L8 7.293l2.646-2.647a.5.5 0 0 1 " +
     ".708.708L8.707 8l2.647 2.646a.5.5 0 0 1-.708.708L8 8.707l-2.646 " +
     "2.647a.5.5 0 0 1-.708-.708L7.293 8 4.646 5.354a.5.5 0 0 1 0-.708",
   ];
 
-  return createIcon(pathData, 16, 16, "currentColor");
-}
+  return globalThis.notificationNs.createIcon(pathData, 16, 16, "currentColor");
+};
 
 // -----------------------------------------------------------------------------
 // phoneIcon
 // -----------------------------------------------------------------------------
-function phoneIcon() {
+globalThis.notificationNs.phoneIcon = () => {
   const pathData = [
     "M3.654 1.328a.678.678 0 0 0-1.015-.063L1.605 2.3c-.483.484-.661 " +
     "1.169-.45 1.77a17.6 17.6 0 0 0 4.168 6.608 17.6 17.6 0 0 0 6.608 " +
@@ -144,26 +150,26 @@ function phoneIcon() {
     "1-4.42-7.009c-.362-1.03-.037-2.137.703-2.877z",
   ];
 
-  return createIcon(pathData, 16, 16, "blue");
-}
+  return globalThis.notificationNs.createIcon(pathData, 16, 16, "blue");
+};
 
 // -----------------------------------------------------------------------------
 // rejectIcon
 // -----------------------------------------------------------------------------
-function rejectIcon() {
+globalThis.notificationNs.rejectIcon = () => {
   const pathData = [
     "M2.146 2.854a.5.5 0 1 1 .708-.708L8 7.293l5.146-5.147a.5.5 0 0 1 " +
     ".708.708L8.707 8l5.147 5.146a.5.5 0 0 1-.708.708L8 8.707l-5.146 " +
     "5.147a.5.5 0 0 1-.708-.708L7.293 8z",
   ];
 
-  return createIcon(pathData, 18, 18, "white");
-}
+  return globalThis.notificationNs.createIcon(pathData, 18, 18, "white");
+};
 
 // -----------------------------------------------------------------------------
 // acceptIcon
 // -----------------------------------------------------------------------------
-function acceptIcon() {
+globalThis.notificationNs.acceptIcon = () => {
   const pathData = [
     "M3.654 1.328a.678.678 0 0 0-1.015-.063L1.605 2.3c-.483.484-.661 " +
     "1.169-.45 1.77a17.6 17.6 0 0 0 4.168 6.608 17.6 17.6 0 0 0 6.608 " +
@@ -178,21 +184,22 @@ function acceptIcon() {
     "1-4.42-7.009c-.362-1.03-.037-2.137.703-2.877z",
   ];
 
-  return createIcon(pathData, 18, 18, "white");
-}
+  return globalThis.notificationNs.createIcon(pathData, 18, 18, "white");
+};
 
 // -----------------------------------------------------------------------------
 // callAction
 // -----------------------------------------------------------------------------
-async function callAction(callId, action) {
+globalThis.notificationNs.callAction = async (callId, action) => {
   try {
     // Reset timer to allow the watcher to remove call objects.
-    globalThis.notification[`call-${callId}`] = 0;
+    globalThis.notificationNs[`call-${callId}`] = 0;
 
     const payload = {
       "call_id": callId,
     };
-    const url = `${NOTIFICATION_INTERCOM_SERVER}/intercom/call/${action}`;
+    const url =
+      `${globalThis.notificationNs.intercomServer}/intercom/call/${action}`;
     await fetch(url, {
       credentials: "include",
       headers: {
@@ -204,33 +211,33 @@ async function callAction(callId, action) {
   } catch {
     // Do nothing.
   }
-}
+};
 
 // -----------------------------------------------------------------------------
 // ignoreCall
 // -----------------------------------------------------------------------------
-async function ignoreCall(callId) {
-  await callAction(callId, "ignore");
-}
+globalThis.notificationNs.ignoreCall = async (callId) => {
+  await globalThis.notificationNs.callAction(callId, "ignore");
+};
 
 // -----------------------------------------------------------------------------
 // rejectCall
 // -----------------------------------------------------------------------------
-async function rejectCall(callId) {
-  await callAction(callId, "reject");
-}
+globalThis.notificationNs.rejectCall = async (callId) => {
+  await globalThis.notificationNs.callAction(callId, "reject");
+};
 
 // -----------------------------------------------------------------------------
 // acceptCall
 // -----------------------------------------------------------------------------
-async function acceptCall(callId) {
-  await callAction(callId, "accept");
-}
+globalThis.notificationNs.acceptCall = async (callId) => {
+  await globalThis.notificationNs.callAction(callId, "accept");
+};
 
 // -----------------------------------------------------------------------------
 // createCallPopup
 // -----------------------------------------------------------------------------
-function createCallPopup(callId, callerName) {
+globalThis.notificationNs.createCallPopup = (callId, callerName) => {
   // Popup
   const callPopup = document.createElement("div");
   callPopup.id = `call-${callId}`;
@@ -254,7 +261,7 @@ function createCallPopup(callId, callerName) {
   callPopup.appendChild(header);
 
   // Popup header, icon
-  const headerIcon = phoneIcon();
+  const headerIcon = globalThis.notificationNs.phoneIcon();
   headerIcon.style.margin = "auto 12px";
   header.appendChild(headerIcon);
 
@@ -269,9 +276,9 @@ function createCallPopup(callId, callerName) {
   close.style.border = "none";
   close.style.backgroundColor = "#fff";
   close.style.cursor = "pointer";
-  close.appendChild(closeIcon());
+  close.appendChild(globalThis.notificationNs.closeIcon());
   close.onclick = () => {
-    ignoreCall(callId);
+    globalThis.notificationNs.ignoreCall(callId);
   };
   header.appendChild(close);
 
@@ -292,9 +299,9 @@ function createCallPopup(callId, callerName) {
   reject.style.borderRadius = "25px";
   reject.style.backgroundColor = "#FF4D4D";
   reject.style.cursor = "pointer";
-  reject.appendChild(rejectIcon());
+  reject.appendChild(globalThis.notificationNs.rejectIcon());
   reject.onclick = () => {
-    rejectCall(callId);
+    globalThis.notificationNs.rejectCall(callId);
   };
   body.appendChild(reject);
 
@@ -306,26 +313,26 @@ function createCallPopup(callId, callerName) {
   accept.style.borderRadius = "25px";
   accept.style.backgroundColor = "#4CAF50";
   accept.style.cursor = "pointer";
-  accept.appendChild(acceptIcon());
+  accept.appendChild(globalThis.notificationNs.acceptIcon());
   accept.onclick = () => {
-    acceptCall(callId);
+    globalThis.notificationNs.acceptCall(callId);
   };
   body.appendChild(accept);
 
   // Popup, audio
   const audio = document.createElement("audio");
-  audio.src = `data:audio/mp3;base64,${ringSound}`;
+  audio.src = `data:audio/mp3;base64,${globalThis.notificationNs.ringSound}`;
   audio.autoplay = true;
   audio.loop = true;
   callPopup.appendChild(audio);
 
   return callPopup;
-}
+};
 
 // -----------------------------------------------------------------------------
 // callHandler
 // -----------------------------------------------------------------------------
-function callHandler(data) {
+globalThis.notificationNs.callHandler = (data) => {
   const callId = data?.call_id;
   if (!callId) throw "invalid id";
 
@@ -333,30 +340,33 @@ function callHandler(data) {
   if (isPopupExist) throw "Call popup is already created";
 
   // Initialize the call timer.
-  globalThis.notification[`call-${callId}`] = Date.now();
+  globalThis.notificationNs[`call-${callId}`] = Date.now();
 
   // Create the call popup and add it into DOM.
   const callerName = data?.caller_name || "unknown";
-  const callPopup = createCallPopup(callId, callerName);
+  const callPopup = globalThis.notificationNs.createCallPopup(
+    callId,
+    callerName,
+  );
   const toast = document.getElementById("notificationContainer");
   toast.appendChild(callPopup);
 
   // Subscribe to the call channel.
-  const callEventSrc = subscribeToCall(callId);
+  const callEventSrc = globalThis.notificationNs.subscribeToCall(callId);
 
   // Trigger the remove job which will delete UI elements if it doesn't ring
   // anymore.
   setTimeout(() => {
-    removeCall(callId, callPopup, callEventSrc);
+    globalThis.notificationNs.removeCall(callId, callPopup, callEventSrc);
   }, 1000);
-}
+};
 
 // -----------------------------------------------------------------------------
 // getIdentity
 // -----------------------------------------------------------------------------
-async function getIdentity() {
+globalThis.notificationNs.getIdentity = async () => {
   try {
-    const url = `${NOTIFICATION_ICS_SERVER}/uuid`;
+    const url = `${globalThis.notificationNs.icsServer}/uuid`;
     const res = await fetch(url, {
       credentials: "include",
       headers: {
@@ -373,67 +383,65 @@ async function getIdentity() {
   } catch {
     return undefined;
   }
-}
+};
 
 // -----------------------------------------------------------------------------
 // onNotificationMessage
 // -----------------------------------------------------------------------------
-function onNotificationMessage(e) {
+globalThis.notificationNs.onNotificationMessage = (e) => {
   try {
     const data = JSON.parse(e.data);
     if (!data) throw "invalid notification data";
 
     if (data?.type === "call") {
-      callHandler(data);
+      globalThis.notificationNs.callHandler(data);
     } else {
       throw "unknown notification type";
     }
   } catch {
     console.error("failed while processing the notification");
   }
-}
+};
 
 // -----------------------------------------------------------------------------
 // subscribe
 // -----------------------------------------------------------------------------
-async function subscribeToNotification() {
+globalThis.notificationNs.subscribeToNotification = async () => {
   // Dont subscribe now if she is not authenticated yet. Try later.
-  const isAuthenticated = await getIdentity();
+  const isAuthenticated = await globalThis.notificationNs.getIdentity();
   if (!isAuthenticated) {
-    setTimeout(subscribeToNotification, 3000);
+    setTimeout(globalThis.notificationNs.subscribeToNotification, 3000);
     return;
   }
 
-  const src = `${NOTIFICATION_INTERCOM_SERVER}/intercom/notification`;
+  const src =
+    `${globalThis.notificationNs.intercomServer}/intercom/notification`;
   const eventSrc = new EventSource(src, { withCredentials: true });
 
   eventSrc.onmessage = (e) => {
-    onNotificationMessage(e);
+    globalThis.notificationNs.onNotificationMessage(e);
   };
 
   eventSrc.onerror = () => {
     console.error("notification channel failed.");
   };
-}
+};
 
 // -----------------------------------------------------------------------------
 // main
 // -----------------------------------------------------------------------------
-// Create the namespace.
-globalThis.notification = globalThis.notification || {};
-
 // Create the notification container in UI
-createNotificationContainer();
+globalThis.notificationNs.createNotificationContainer();
 
 // Subscribe to the notification channel.
-subscribeToNotification();
+globalThis.notificationNs.subscribeToNotification();
 
 // -----------------------------------------------------------------------------
 // base64 globals
 // -----------------------------------------------------------------------------
 // Ring sound, generated by:
 //   base64 ringing.mp3 >/tmp/ringSound.txt
-const ringSound = `
+globalThis.notificationNs.ringSound = `
 //vQZAAP8AAAaQAAAAgAAA0gAAABAAABpAAAACAAADSAAAAETEFNRTMuMTAwVVVVVVVVVVVVVVVV
 VVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVV
 VVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVV

@@ -1,5 +1,5 @@
-const ICS = "https://ics.nightly.opendesk.qa";
-const PORTAL = "https://portal.nightly.opendesk.qa";
+const SILENT_ICS_SERVER = "https://ics.nightly.opendesk.qa";
+const SILENT_PORTAL_SERVER = "https://portal.nightly.opendesk.qa";
 
 // ---------------------------------------------------------------------------
 // Toggle menu. It will be triggered after clicking the menu icon.
@@ -144,10 +144,11 @@ function createTopbar(nav) {
     topDiv.style.borderBottom = "1px solid #ccc";
     topDiv.style.boxShadow = "0 2px 5px rgba(0, 0, 0, 0.2)";
     topDiv.innerHTML = `
-      <a href="${PORTAL}" tabindex="0" target="_blank"
+      <a href="${SILENT_PORTAL_SERVER}" tabindex="0" target="_blank"
         aria-label="Show portal" style="margin-left:16px"
       >
-        <img src="${PORTAL}/univention/portal/icons/logos/domain.svg"
+        <img
+          src="${SILENT_PORTAL_SERVER}/univention/portal/icons/logos/domain.svg"
           style="width:82px; margin:16px 8px;"
           alt="OpenDesk">
       </a>
@@ -170,7 +171,7 @@ function createTopbar(nav) {
 // ---------------------------------------------------------------------------
 async function getIdentity() {
   try {
-    const url = `${ICS}/uuid`;
+    const url = `${SILENT_ICS_SERVER}/uuid`;
     const res = await fetch(url, {
       credentials: "include",
       headers: {
@@ -193,10 +194,8 @@ async function getIdentity() {
 // updateUI
 // ---------------------------------------------------------------------------
 function updateUI(identity) {
-  globalThis.notification.identity = identity;
-
   const el = document.getElementById("identity");
-  el.textContent = `Logged in as ${globalThis.notification.identity}`;
+  el.textContent = `Logged in as ${identity}`;
   document.getElementById("button-call").disabled = false;
 }
 
@@ -205,7 +204,7 @@ function updateUI(identity) {
 // ---------------------------------------------------------------------------
 async function getNavigationData() {
   try {
-    const url = `${ICS}/navigation.json`;
+    const url = `${SILENT_ICS_SERVER}/navigation.json`;
     const res = await fetch(url, {
       credentials: "include",
       headers: {
@@ -236,7 +235,7 @@ function silentLogin() {
   // Silent login inside a hidden iframe.
   const iframeSilentLogin = document.createElement("iframe");
   iframeSilentLogin.id = "opendeskIframeSilentLogin";
-  iframeSilentLogin.src = `${ICS}/silent`;
+  iframeSilentLogin.src = `${SILENT_ICS_SERVER}/silent`;
   iframeSilentLogin.style.display = "none";
   document.body.appendChild(iframeSilentLogin);
 
@@ -249,7 +248,7 @@ function silentLogin() {
     // The silent login is not enough in some cases.
     const iframeNavigation = document.createElement("iframe");
     iframeNavigation.id = "opendeskIframeNavigation";
-    iframeNavigation.src = `${ICS}/uuid`;
+    iframeNavigation.src = `${SILENT_ICS_SERVER}/uuid`;
     iframeNavigation.style.display = "none";
     document.body.appendChild(iframeNavigation);
 
