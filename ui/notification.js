@@ -3,12 +3,23 @@
 // -----------------------------------------------------------------------------
 globalThis.notificationNs = {};
 
+// Base domain
+try {
+  globalThis.notificationNs.base = globalThis.location.host.split(".").slice(1)
+    .join(".");
+} catch {
+  // Do nothing.
+}
+
 // ICS and Intercom servers will be the same if the integration is done.
 // Currently the proxy server redirects requests to the right servers depending
 // on the path values.
-globalThis.notificationNs.icsServer = "https://ics.nightly.opendesk.qa";
-globalThis.notificationNs.intercomServer = "https://ics.nightly.opendesk.qa";
-globalThis.notificationNs.meetServer = "https://meet.nightly.opendesk.qa";
+globalThis.notificationNs.icsServer =
+  `https://ics.${globalThis.notificationNs.base}`;
+globalThis.notificationNs.intercomServer =
+  `https://ics.${globalThis.notificationNs.base}`;
+globalThis.notificationNs.meetServer =
+  `https://meet.${globalThis.notificationNs.base}`;
 
 // -----------------------------------------------------------------------------
 // createNotificationContainer
@@ -441,11 +452,15 @@ globalThis.notificationNs.subscribeToNotification = async () => {
 // -----------------------------------------------------------------------------
 // main
 // -----------------------------------------------------------------------------
-// Create the notification container in UI
-globalThis.notificationNs.createNotificationContainer();
+if (globalThis.notificationNs.base) {
+  // Create the notification container in UI
+  globalThis.notificationNs.createNotificationContainer();
 
-// Subscribe to the notification channel.
-globalThis.notificationNs.subscribeToNotification();
+  // Subscribe to the notification channel.
+  globalThis.notificationNs.subscribeToNotification();
+} else {
+  console.error("failed while loading notification (no base domain)");
+}
 
 // -----------------------------------------------------------------------------
 // base64 globals
