@@ -288,6 +288,41 @@ async function callAction(req: Request, actionType: string): Promise<Response> {
 }
 
 // -----------------------------------------------------------------------------
+// sendMessage
+// -----------------------------------------------------------------------------
+async function sendMessage(req: Request, identity: string): Promise<Response> {
+  if (!identity) return unauthorized();
+
+  const pl = await req.json();
+  const receiverId = pl.receiver_id;
+  const messageText = pl.message_text;
+
+  const encoder = new TextEncoder();
+  const encodedReceiverId = encoder.encode(receiverId);
+  const receiverUUID = await uuid.generate(UUID_NAMESPACE, encodedReceiverId);
+  const encodedMessageId = encoder.encode(v1.generate());
+  const messageId = await uuid.generate(UUID_NAMESPACE, encodedMessageId) +
+    Math.random().toString().slice(2, 10);
+
+  const headers = ACTION_HEADERS;
+  const data = {
+    "type": "message",
+    "message_id": messageId,
+    "sender_id": identity,
+    "sender_name": identity,
+    "message_text": messageText,
+  };
+  const notification = JSON.stringify(data);
+
+  await publishNotification(receiverUUID, notification);
+
+  return new Response(notification, {
+    status: 200,
+    headers,
+  });
+}
+
+// -----------------------------------------------------------------------------
 // handler
 // -----------------------------------------------------------------------------
 async function handler(req: Request): Promise<Response> {
@@ -324,6 +359,8 @@ async function handler(req: Request): Promise<Response> {
       return await callAction(req, "reject");
     } else if (path === `${PRE}/call/accept`) {
       return await callAction(req, "accept");
+    } else if (path === `${PRE}/message/send`) {
+      return await sendMessage(req, identity);
     } else {
       return notFound();
     }
