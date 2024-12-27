@@ -130,7 +130,7 @@ globalThis.notificationNs.closeIcon = () => {
     "2.647a.5.5 0 0 1-.708-.708L7.293 8 4.646 5.354a.5.5 0 0 1 0-.708",
   ];
 
-  return globalThis.notificationNs.createIcon(pathData, 16, 16, "currentColor");
+  return globalThis.notificationNs.createIcon(pathData, 16, 16, "dimgray");
 };
 
 // -----------------------------------------------------------------------------
@@ -250,7 +250,7 @@ globalThis.notificationNs.createCallPopup = (callId, callerName) => {
   callPopup.id = `call-${callId}`;
   callPopup.style.display = "flex";
   callPopup.style.flexDirection = "column";
-  callPopup.style.width = "240px";
+  callPopup.style.width = "260px";
   callPopup.style.height = "100px";
   callPopup.style.margin = "8px";
   callPopup.style.border = "1px solid #e0e0e0";
@@ -275,6 +275,8 @@ globalThis.notificationNs.createCallPopup = (callId, callerName) => {
   // Popup header, message
   const message = document.createElement("span");
   message.textContent = `${callerName} is calling`;
+  message.style.color = "dimgray";
+  message.style.fontSize = "16px";
   header.appendChild(message);
 
   // Popup header, close button
@@ -300,10 +302,11 @@ globalThis.notificationNs.createCallPopup = (callId, callerName) => {
 
   // Popup body, reject button
   const reject = document.createElement("button");
-  reject.style.margin = "4px 24px";
-  reject.style.padding = "8px";
+  reject.style.margin = "4px 18px";
+  reject.style.width = "38px";
+  reject.style.height = "32px";
   reject.style.border = "none";
-  reject.style.borderRadius = "25px";
+  reject.style.borderRadius = "16px";
   reject.style.backgroundColor = "#FF4D4D";
   reject.style.cursor = "pointer";
   reject.appendChild(globalThis.notificationNs.rejectIcon());
@@ -314,10 +317,11 @@ globalThis.notificationNs.createCallPopup = (callId, callerName) => {
 
   // Popup body, accept button
   const accept = document.createElement("button");
-  accept.style.margin = "4px 24px";
-  accept.style.padding = "8px";
+  accept.style.margin = "4px 18px";
+  accept.style.width = "38px";
+  accept.style.height = "32px";
   accept.style.border = "none";
-  accept.style.borderRadius = "25px";
+  accept.style.borderRadius = "16px";
   accept.style.backgroundColor = "#4CAF50";
   accept.style.cursor = "pointer";
   accept.appendChild(globalThis.notificationNs.acceptIcon());
