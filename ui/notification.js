@@ -23,6 +23,8 @@ globalThis.notificationNs.intercomServer =
 globalThis.notificationNs.meetServer =
   `https://meet.${globalThis.notificationNs.base}`;
 
+globalThis.notificationNs.messageTimeout = 20;
+
 // -----------------------------------------------------------------------------
 // createNotificationContainer
 // -----------------------------------------------------------------------------
@@ -285,12 +287,12 @@ globalThis.notificationNs.createCallPopup = (callId, callerName) => {
   headerIcon.style.margin = "auto 12px";
   header.appendChild(headerIcon);
 
-  // Popup header, message
-  const message = document.createElement("span");
-  message.textContent = `${callerName} is calling`;
-  message.style.color = "dimgray";
-  message.style.fontSize = "16px";
-  header.appendChild(message);
+  // Popup header, title
+  const title = document.createElement("span");
+  title.textContent = `${callerName} is calling`;
+  title.style.color = "dimgray";
+  title.style.fontSize = "16px";
+  header.appendChild(title);
 
   // Popup header, close button
   const close = document.createElement("button");
@@ -386,6 +388,126 @@ globalThis.notificationNs.callHandler = (data) => {
 };
 
 // -----------------------------------------------------------------------------
+// removeMessage
+// -----------------------------------------------------------------------------
+globalThis.notificationNs.removeMessage = (messageId, messagePopup) => {
+  if (!messageId) throw "invalid message id";
+  if (!messagePopup) throw "missing message div";
+  if (globalThis.notificationNs[`message-${messageId}`] === undefined) {
+    throw "missing message timer";
+  }
+
+  // Remove objects of this message since it is expired.
+  delete globalThis.notificationNs[`message-${messageId}`];
+  messagePopup.remove();
+};
+
+// -----------------------------------------------------------------------------
+// createMessagePopup
+// -----------------------------------------------------------------------------
+globalThis.notificationNs.createMessagePopup = (
+  messageId,
+  senderName,
+  messageText,
+) => {
+  // Popup
+  const messagePopup = document.createElement("div");
+  messagePopup.id = `message-${messageId}`;
+  messagePopup.style.display = "flex";
+  messagePopup.style.flexDirection = "column";
+  messagePopup.style.width = "260px";
+  messagePopup.style.height = "100px";
+  messagePopup.style.margin = "8px";
+  messagePopup.style.border = "1px solid #e0e0e0";
+  messagePopup.style.borderRadius = "8px";
+  messagePopup.style.boxShadow = "0 4px 6px rgba(0, 0, 0, 0.1)";
+  messagePopup.style.backgroundColor = "#fff";
+
+  // Popup header
+  const header = document.createElement("div");
+  header.style.display = "flex";
+  header.style.width = "100%";
+  header.style.marginTop = "8px";
+  header.style.marginBottom = "auto";
+  header.style.alignItems = "center";
+  messagePopup.appendChild(header);
+
+  // Popup header, icon
+  const headerIcon = globalThis.notificationNs.phoneIcon();
+  headerIcon.style.margin = "auto 12px";
+  header.appendChild(headerIcon);
+
+  // Popup header, title
+  const title = document.createElement("span");
+  title.textContent = `${senderName} is calling`;
+  title.style.color = "dimgray";
+  title.style.fontSize = "16px";
+  header.appendChild(title);
+
+  // Popup header, close button
+  const close = document.createElement("button");
+  close.style.margin = "0px 0px auto auto";
+  close.style.border = "none";
+  close.style.backgroundColor = "#fff";
+  close.style.cursor = "pointer";
+  close.appendChild(globalThis.notificationNs.closeIcon());
+  close.onclick = () => {
+    // Make it invisible, timer will delete it.
+    messagePopup.style.display = "none";
+  };
+  header.appendChild(close);
+
+  // Popup body
+  const body = document.createElement("div");
+  body.style.display = "flex";
+  body.style.flex = "1";
+  body.style.width = "100%";
+  body.style.justifyContent = "center";
+  body.style.alignItems = "center";
+  body.textContent = messageText;
+  messagePopup.appendChild(body);
+
+  // Popup, audio
+  const audio = document.createElement("audio");
+  audio.src = `data:audio/mp3;base64,${globalThis.notificationNs.ringSound}`;
+  audio.autoplay = true;
+  audio.loop = false;
+  messagePopup.appendChild(audio);
+
+  return messagePopup;
+};
+
+// -----------------------------------------------------------------------------
+// messageHandler
+// -----------------------------------------------------------------------------
+globalThis.notificationNs.messageHandler = (data) => {
+  const messageId = data?.message_id;
+  if (!messageId) throw "invalid id";
+
+  const isPopupExist = document.getElementById(`message-${messageId}`);
+  if (isPopupExist) throw "Message popup is already created";
+
+  // Initialize the message timer.
+  globalThis.notificationNs[`message-${messageId}`] = Date.now();
+
+  // Create the message popup and add it into DOM.
+  const senderName = data?.sender_name || "unknown";
+  const messageText = data?.message_text || "";
+  const messagePopup = globalThis.notificationNs.createMessagePopup(
+    messageId,
+    senderName,
+    messageText,
+  );
+  const toast = document.getElementById("notificationContainer");
+  toast.appendChild(messagePopup);
+
+  // Trigger the remove job which will delete UI elements after a while.
+  setTimeout(() => {
+    globalThis.notificationNs.removeMessage(messageId, messagePopup);
+  }, globalThis.notificationNs.messageTimeout * 1000);
+};
+
+// -----------------------------------------------------------------------------
 // getIdentity
 // -----------------------------------------------------------------------------
 globalThis.notificationNs.getIdentity = async () => {
@@ -419,6 +541,8 @@ globalThis.notificationNs.onNotificationMessage = (e) => {
 
     if (data?.type === "call") {
       globalThis.notificationNs.callHandler(data);
+    } else if (data?.type === "message") {
+      globalThis.notificationNs.messageHandler(data);
     } else {
       throw "unknown notification type";
     }
