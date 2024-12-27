@@ -14,6 +14,8 @@ try {
 // ICS and Intercom servers will be the same if the integration is done.
 // Currently the proxy server redirects requests to the right servers depending
 // on the path values.
+//
+// Get the servers from .well-known in the future.
 globalThis.notificationNs.icsServer =
   `https://ics.${globalThis.notificationNs.base}`;
 globalThis.notificationNs.intercomServer =
