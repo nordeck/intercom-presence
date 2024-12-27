@@ -23,8 +23,7 @@ function onCallMessage(e) {
       // ring function will restore UI
       RING_COUNTER = 71;
 
-      window.location =
-        `${CALL_MEET_SERVER}/call-${CALL_ID}` +
+      globalThis.location = `${CALL_MEET_SERVER}/call-${CALL_ID}` +
         "#config.prejoinConfig.enabled=false" +
         "&config.startWithVideoMuted=true";
     }

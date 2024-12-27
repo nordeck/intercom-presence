@@ -234,10 +234,9 @@ globalThis.notificationNs.rejectCall = async (callId) => {
 globalThis.notificationNs.acceptCall = async (callId) => {
   await globalThis.notificationNs.callAction(callId, "accept");
 
-  const hash =
-    "#config.prejoinConfig.enabled=false" +
+  const hash = "#config.prejoinConfig.enabled=false" +
     "&config.startWithVideoMuted=true";
-  window.open(
+  globalThis.open(
     `${globalThis.notificationNs.meetServer}/call-${callId}${hash}`,
     "_blank",
   );
