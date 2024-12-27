@@ -197,6 +197,7 @@ function updateUI(identity) {
   const el = document.getElementById("identity");
   el.textContent = `Logged in as ${identity}`;
   document.getElementById("button-call").disabled = false;
+  document.getElementById("button-message").disabled = false;
 }
 
 // ---------------------------------------------------------------------------

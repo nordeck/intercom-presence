@@ -165,3 +165,38 @@ async function call() {
     document.getElementById("button-call").style.display = "block";
   }
 }
+
+// -----------------------------------------------------------------------
+// sendMessage
+// -----------------------------------------------------------------------
+// deno-lint-ignore no-unused-vars
+async function sendMessage() {
+  const receiver = document.getElementById("callee").value;
+  const message = document.getElementById("message").value.trim();
+  if (!message) return;
+
+  const payload = {
+    "receiver_id": receiver,
+    "message_text": message,
+  };
+
+  try {
+    document.getElementById("button-message").disabled = true;
+
+    const url = `${CALL_INTERCOM_SERVER}/intercom/message/send`;
+    const res = await fetch(url, {
+      credentials: "include",
+      headers: {
+        Accept: "application/json",
+      },
+      method: "post",
+      body: JSON.stringify(payload),
+    });
+    const data = await res.json();
+    if (!data?.message_id) throw "failed to send the message";
+
+    document.getElementById("button-message").disabled = false;
+  } catch {
+    document.getElementById("button-message").disabled = false;
+  }
+}

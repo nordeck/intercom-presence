@@ -170,6 +170,26 @@ globalThis.notificationNs.phoneIcon = () => {
 };
 
 // -----------------------------------------------------------------------------
+// messageIcon
+// -----------------------------------------------------------------------------
+globalThis.notificationNs.messageIcon = () => {
+  const pathData = [
+    "M2.678 11.894a1 1 0 0 1 .287.801 11 11 0 0 1-.398 2c1.395-.323 " +
+    "2.247-.697 2.634-.893a1 1 0 0 1 .71-.074A8 8 0 0 0 8 14c3.996 0 " +
+    "7-2.807 7-6s-3.004-6-7-6-7 2.808-7 6c0 1.468.617 2.83 1.678 3.894m-.493 " +
+    "3.905a22 22 0 0 1-.713.129c-.2.032-.352-.176-.273-.362a10 10 0 0 0 " +
+    ".244-.637l.003-.01c.248-.72.45-1.548.524-2.319C.743 11.37 0 9.76 0 " +
+    "8c0-3.866 3.582-7 8-7s8 3.134 8 7-3.582 7-8 7a9 9 0 0 " +
+    "1-2.347-.306c-.52.263-1.639.742-3.468 1.105",
+    "M4 5.5a.5.5 0 0 1 .5-.5h7a.5.5 0 0 1 0 1h-7a.5.5 0 0 1-.5-.5M4 8a.5.5 " +
+    "0 0 1 .5-.5h7a.5.5 0 0 1 0 1h-7A.5.5 0 0 1 4 8m0 2.5a.5.5 0 0 1 " +
+    ".5-.5h4a.5.5 0 0 1 0 1h-4a.5.5 0 0 1-.5-.5",
+  ];
+
+  return globalThis.notificationNs.createIcon(pathData, 16, 16, "blue");
+};
+
+// -----------------------------------------------------------------------------
 // rejectIcon
 // -----------------------------------------------------------------------------
 globalThis.notificationNs.rejectIcon = () => {
@@ -310,7 +330,7 @@ globalThis.notificationNs.createCallPopup = (callId, callerName) => {
   const body = document.createElement("div");
   body.style.display = "flex";
   body.style.flex = "1";
-  body.style.width = "100%";
+  body.style.width = "90%";
   body.style.justifyContent = "center";
   body.style.alignItems = "center";
   callPopup.appendChild(body);
@@ -415,8 +435,9 @@ globalThis.notificationNs.createMessagePopup = (
   messagePopup.id = `message-${messageId}`;
   messagePopup.style.display = "flex";
   messagePopup.style.flexDirection = "column";
-  messagePopup.style.width = "260px";
-  messagePopup.style.height = "100px";
+  messagePopup.style.width = "420px";
+  messagePopup.style.minHeight = "100px";
+  messagePopup.style.maxHeight = "200px";
   messagePopup.style.margin = "8px";
   messagePopup.style.border = "1px solid #e0e0e0";
   messagePopup.style.borderRadius = "8px";
@@ -433,13 +454,13 @@ globalThis.notificationNs.createMessagePopup = (
   messagePopup.appendChild(header);
 
   // Popup header, icon
-  const headerIcon = globalThis.notificationNs.phoneIcon();
+  const headerIcon = globalThis.notificationNs.messageIcon();
   headerIcon.style.margin = "auto 12px";
   header.appendChild(headerIcon);
 
   // Popup header, title
   const title = document.createElement("span");
-  title.textContent = `${senderName} is calling`;
+  title.textContent = `${senderName}`;
   title.style.color = "dimgray";
   title.style.fontSize = "16px";
   header.appendChild(title);
@@ -461,9 +482,10 @@ globalThis.notificationNs.createMessagePopup = (
   const body = document.createElement("div");
   body.style.display = "flex";
   body.style.flex = "1";
-  body.style.width = "100%";
-  body.style.justifyContent = "center";
-  body.style.alignItems = "center";
+  body.style.width = "90%";
+  body.style.padding = "8px";
+  body.style.overflow = "auto";
+  body.style.whiteSpace = "pre-wrap";
   body.textContent = messageText;
   messagePopup.appendChild(body);
 
