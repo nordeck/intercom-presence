@@ -24,8 +24,9 @@ function onCallMessage(e) {
       RING_COUNTER = 71;
 
       globalThis.location = `${CALL_MEET_SERVER}/call-${CALL_ID}` +
-        "#config.prejoinConfig.enabled=false" +
-        "&config.startWithVideoMuted=true";
+        `#config.prejoinConfig.enabled=false` +
+        `&config.startWithVideoMuted=true` +
+        `&config.localSubject="Direct Call"`;
     }
   } catch {
     // do nothing

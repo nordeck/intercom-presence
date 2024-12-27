@@ -244,7 +244,8 @@ async function addCall(req: Request, identity: string): Promise<Response> {
   const encodedCalleeId = encoder.encode(calleeId);
   const calleeUUID = await uuid.generate(UUID_NAMESPACE, encodedCalleeId);
   const encodedCallId = encoder.encode(v1.generate());
-  const callId = await uuid.generate(UUID_NAMESPACE, encodedCallId);
+  const callId = await uuid.generate(UUID_NAMESPACE, encodedCallId) +
+    Math.random().toString().slice(2, 10);
 
   const headers = ACTION_HEADERS;
   const data = {

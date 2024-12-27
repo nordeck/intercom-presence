@@ -235,8 +235,9 @@ globalThis.notificationNs.acceptCall = async (callId) => {
   await globalThis.notificationNs.callAction(callId, "accept");
 
   const url = `${globalThis.notificationNs.meetServer}/call-${callId}` +
-    "#config.prejoinConfig.enabled=false" +
-    "&config.startWithVideoMuted=true";
+    `#config.prejoinConfig.enabled=false` +
+    `&config.startWithVideoMuted=true` +
+    `&config.localSubject="Direct Call"`;
   globalThis.open(url, "_blank");
 };
 
