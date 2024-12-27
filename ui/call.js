@@ -2,6 +2,7 @@
 // Globals
 // -----------------------------------------------------------------------
 const CALL_INTERCOM_SERVER = "https://ics.nightly.opendesk.qa";
+const CALL_MEET_SERVER = "https://meet.nightly.opendesk.qa";
 
 let CALL_ID = "";
 let RING_COUNTER = 0;
@@ -21,6 +22,11 @@ function onCallMessage(e) {
     } else if (data.type === "accept") {
       // ring function will restore UI
       RING_COUNTER = 71;
+
+      window.location =
+        `${CALL_MEET_SERVER}/call-${CALL_ID}` +
+        "#config.prejoinConfig.enabled=false" +
+        "&config.startWithVideoMuted=true";
     }
   } catch {
     // do nothing

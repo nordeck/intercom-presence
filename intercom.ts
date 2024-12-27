@@ -9,7 +9,6 @@ const ICS_SERVER = "https://ics.nightly.opendesk.qa";
 const HTTP_HOSTNAME = "0.0.0.0";
 const HTTP_PORT = 8001;
 const NATS_SERVERS = { servers: "127.0.0.1:4222" };
-const MEETING_SERVER = "https://meet.jit.si";
 const PRE = "/intercom";
 const UUID_NAMESPACE = "6ba7b810-9dad-11d1-80b4-00c04fd430c8";
 
@@ -246,13 +245,11 @@ async function addCall(req: Request, identity: string): Promise<Response> {
   const calleeUUID = await uuid.generate(UUID_NAMESPACE, encodedCalleeId);
   const encodedCallId = encoder.encode(v1.generate());
   const callId = await uuid.generate(UUID_NAMESPACE, encodedCallId);
-  const callUrl = `${MEETING_SERVER}/${callId}`;
 
   const headers = ACTION_HEADERS;
   const data = {
     "type": "call",
     "call_id": callId,
-    "call_url": callUrl,
     "caller_id": identity,
     "caller_name": identity,
   };

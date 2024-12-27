@@ -3,11 +3,12 @@
 // -----------------------------------------------------------------------------
 globalThis.notificationNs = {};
 
-// These two servers will be the same if the integration is done. Currently the
-// proxy server redirects requests to the right servers depending on the path
-// values.
+// ICS and Intercom servers will be the same if the integration is done.
+// Currently the proxy server redirects requests to the right servers depending
+// on the path values.
 globalThis.notificationNs.icsServer = "https://ics.nightly.opendesk.qa";
 globalThis.notificationNs.intercomServer = "https://ics.nightly.opendesk.qa";
+globalThis.notificationNs.meetServer = "https://meet.nightly.opendesk.qa";
 
 // -----------------------------------------------------------------------------
 // createNotificationContainer
@@ -188,7 +189,7 @@ globalThis.notificationNs.acceptIcon = () => {
 };
 
 // -----------------------------------------------------------------------------
-// callAction
+// callAction (template for action functions)
 // -----------------------------------------------------------------------------
 globalThis.notificationNs.callAction = async (callId, action) => {
   try {
@@ -232,6 +233,14 @@ globalThis.notificationNs.rejectCall = async (callId) => {
 // -----------------------------------------------------------------------------
 globalThis.notificationNs.acceptCall = async (callId) => {
   await globalThis.notificationNs.callAction(callId, "accept");
+
+  const hash =
+    "#config.prejoinConfig.enabled=false" +
+    "&config.startWithVideoMuted=true";
+  window.open(
+    `${globalThis.notificationNs.meetServer}/call-${callId}${hash}`,
+    "_blank",
+  );
 };
 
 // -----------------------------------------------------------------------------
