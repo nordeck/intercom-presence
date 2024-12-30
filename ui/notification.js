@@ -337,7 +337,8 @@ globalThis.notificationNs.createCallPopup = (callId, callerName) => {
 
   // Popup body, reject button
   const reject = document.createElement("button");
-  reject.style.margin = "4px 18px";
+  reject.style.margin = "8px 18px";
+  reject.style.padding = "0px";
   reject.style.width = "38px";
   reject.style.height = "32px";
   reject.style.border = "none";
@@ -352,7 +353,8 @@ globalThis.notificationNs.createCallPopup = (callId, callerName) => {
 
   // Popup body, accept button
   const accept = document.createElement("button");
-  accept.style.margin = "4px 18px";
+  accept.style.margin = "8px 18px";
+  accept.style.padding = "0px";
   accept.style.width = "38px";
   accept.style.height = "32px";
   accept.style.border = "none";
