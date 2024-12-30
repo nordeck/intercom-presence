@@ -291,7 +291,7 @@ globalThis.notificationNs.createCallPopup = (callId, callerName) => {
   callPopup.style.border = "1px solid #e0e0e0";
   callPopup.style.borderRadius = "8px";
   callPopup.style.boxShadow = "0 4px 6px rgba(0, 0, 0, 0.1)";
-  callPopup.style.backgroundColor = "#fff";
+  callPopup.style.backgroundColor = "#F8F8F8";
 
   // Popup header
   const header = document.createElement("div");
@@ -318,7 +318,7 @@ globalThis.notificationNs.createCallPopup = (callId, callerName) => {
   const close = document.createElement("button");
   close.style.margin = "0px 0px auto auto";
   close.style.border = "none";
-  close.style.backgroundColor = "#fff";
+  close.style.backgroundColor = "#F8F8F8";
   close.style.cursor = "pointer";
   close.appendChild(globalThis.notificationNs.closeIcon());
   close.onclick = () => {
@@ -333,6 +333,8 @@ globalThis.notificationNs.createCallPopup = (callId, callerName) => {
   body.style.width = "90%";
   body.style.justifyContent = "center";
   body.style.alignItems = "center";
+  body.style.fontSize = "16px";
+  body.style.color = "#43464B";
   callPopup.appendChild(body);
 
   // Popup body, reject button
@@ -444,7 +446,7 @@ globalThis.notificationNs.createMessagePopup = (
   messagePopup.style.border = "1px solid #e0e0e0";
   messagePopup.style.borderRadius = "8px";
   messagePopup.style.boxShadow = "0 4px 6px rgba(0, 0, 0, 0.1)";
-  messagePopup.style.backgroundColor = "#fff";
+  messagePopup.style.backgroundColor = "#F8F8F8";
 
   // Popup header
   const header = document.createElement("div");
@@ -471,7 +473,7 @@ globalThis.notificationNs.createMessagePopup = (
   const close = document.createElement("button");
   close.style.margin = "0px 0px auto auto";
   close.style.border = "none";
-  close.style.backgroundColor = "#fff";
+  close.style.backgroundColor = "#F8F8F8";
   close.style.cursor = "pointer";
   close.appendChild(globalThis.notificationNs.closeIcon());
   close.onclick = () => {
@@ -488,6 +490,8 @@ globalThis.notificationNs.createMessagePopup = (
   body.style.padding = "8px";
   body.style.overflow = "auto";
   body.style.whiteSpace = "pre-wrap";
+  body.style.fontSize = "16px";
+  body.style.color = "#43464B";
   body.textContent = messageText;
   messagePopup.appendChild(body);
 
