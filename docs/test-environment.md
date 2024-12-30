@@ -12,7 +12,7 @@ to do for them in the local environment:
 - https://id.nightly.opendesk.qa
 - https://ics.nightly.opendesk.qa (_this will be behind a local reverse proxy_)
 
-Log in as `Administrator` and create a test user.
+Log in the portal as `Administrator` and create a few test users.
 
 ## Local components
 
@@ -104,7 +104,7 @@ This is a proxy for [Intercom service](../intercom.ts) and for openDesk's ICS.
 
 ## NATS server
 
-Start the NATS server in the local host:
+Start the NATS server on the local host:
 
 ```bash
 nats-server
@@ -112,7 +112,7 @@ nats-server
 
 ## Intercom service
 
-Start the intercom service in the local host:
+Start the intercom service on the local host:
 
 ```bash
 deno run --allow-net --unsafely-ignore-certificate-errors --watch intercom.ts
