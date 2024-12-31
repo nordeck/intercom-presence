@@ -36,6 +36,9 @@ globalThis.notificationNs.createNotificationContainer = () => {
   notificationContainer.style.top = "1px";
   notificationContainer.style.right = "1px";
   notificationContainer.style.zIndex = "1000";
+  notificationContainer.style.display = "flex";
+  notificationContainer.style.flexDirection = "column";
+  notificationContainer.style.alignItems = "flex-end";
 
   document.body.appendChild(notificationContainer);
 };
