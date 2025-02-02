@@ -1,5 +1,5 @@
-const SILENT_ICS_SERVER = "https://ics.nightly.opendesk.qa";
-const SILENT_PORTAL_SERVER = "https://portal.nightly.opendesk.qa";
+const SILENT_ICS_SERVER = "https://ics.nightly.opendesk.run";
+const SILENT_PORTAL_SERVER = "https://portal.nightly.opendesk.run";
 
 // ---------------------------------------------------------------------------
 // Toggle menu. It will be triggered after clicking the menu icon.

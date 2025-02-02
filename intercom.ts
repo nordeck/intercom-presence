@@ -5,7 +5,7 @@ import type { NatsConnection } from "jsr:@nats-io/nats-core@3.0.0-46";
 // -----------------------------------------------------------------------------
 // Globals
 // -----------------------------------------------------------------------------
-const ICS_SERVER = "https://ics.nightly.opendesk.qa";
+const ICS_SERVER = "https://ics.nightly.opendesk.run";
 const HTTP_HOSTNAME = "0.0.0.0";
 const HTTP_PORT = 8001;
 const NATS_SERVERS = { servers: "127.0.0.1:4222" };

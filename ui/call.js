@@ -1,8 +1,8 @@
 // -----------------------------------------------------------------------
 // Globals
 // -----------------------------------------------------------------------
-const CALL_INTERCOM_SERVER = "https://ics.nightly.opendesk.qa";
-const CALL_MEET_SERVER = "https://meet.nightly.opendesk.qa";
+const CALL_INTERCOM_SERVER = "https://ics.nightly.opendesk.run";
+const CALL_MEET_SERVER = "https://meet.nightly.opendesk.run";
 
 let CALL_ID = "";
 let RING_COUNTER = 0;
