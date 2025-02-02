@@ -3,14 +3,19 @@
 This guide is about creating a local test environment which is integrated with
 the nightly deployment.
 
+Possible nightly deployments:
+
+- *.nightly.opendesk.qa
+- *.nightly.opendesk.run
+
 ## Components from nightly deployment
 
 The following components will be on the nightly deployment. So, there is nothing
 to do for them in the local environment:
 
-- https://portal.nightly.opendesk.qa
-- https://id.nightly.opendesk.qa
-- https://ics.nightly.opendesk.qa (_this will be behind a local reverse proxy_)
+- https://id.nightly.opendesk.run
+- https://ics.nightly.opendesk.run (_this will be behind a local reverse proxy_)
+- https://portal.nightly.opendesk.run
 
 Log in the portal as `Administrator` and create a few test users.
 
@@ -18,18 +23,20 @@ Log in the portal as `Administrator` and create a few test users.
 
 The following components will be on the local environment:
 
-- https://myapp.nightly.opendesk.qa
-- https://ics.nightly.opendesk.qa (_as reverse proxy_)
+- https://ics.nightly.opendesk.run (_as reverse proxy_)
+- https://myapp.nightly.opendesk.run
+- https://notes.nightly.opendesk.run (_optional for demo_)
 
 These will be behind an Nginx proxy. So, create local DNS records for them which
 point to the reverse proxy. For example:
 
-- myapp.nightly.opendesk.qa -> 172.18.18.40
-- ics.nightly.opendesk.qa -> 172.18.18.40
+- ics.nightly.opendesk.run -> 172.18.18.40
+- myapp.nightly.opendesk.run -> 172.18.18.40
+- notes.nightly.opendesk.run -> 172.18.18.40 (_optional for demo_)
 
 ## Sample Nginx config
 
-### myapp.nightly.opendesk.qa
+### myapp.nightly.opendesk.run
 
 ```config
 server {
@@ -37,7 +44,11 @@ server {
   listen [::]:443 ssl http2;
 
   include snippets/snakeoil.conf;
-  server_name myapp.nightly.opendesk.qa;
+
+  # notes is optional only for demo
+  server_name
+    myapp.nightly.opendesk.run
+    notes.nightly.opendesk.run;
 
   root /var/www/myapp;
 
@@ -55,7 +66,7 @@ server {
 
 `/var/www/myapp` folder contains files which are in [ui](../ui).
 
-### ics.nightly.opendesk.qa
+### ics.nightly.opendesk.run
 
 There is a local reverse proxy for this domain because we want to run our
 additional ICS endpoints on the same domain to get credentials. ICS's session
@@ -67,7 +78,7 @@ server {
   listen [::]:443 ssl http2;
 
   include snippets/snakeoil.conf;
-  server_name ics.nightly.opendesk.qa;
+  server_name ics.nightly.opendesk.run;
 
   location /intercom/ {
     proxy_pass http://172.18.18.1:8001;
@@ -124,7 +135,7 @@ Open an openDesk application and run the following command in the browser
 console:
 
 ```javascript
-import("https://myapp.nightly.opendesk.qa/notification.js");
+import("https://myapp.nightly.opendesk.run/notification.js");
 ```
 
 This page will subscribe to the notification channel and will receive calls,
